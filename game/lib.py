@@ -7,6 +7,12 @@ SEPARATOR = '\n-----------------------'
 PLAYER = 0
 COMPUTER = 1
 
+# rows
+MELEE = 0
+RANGED = 1
+SEIGE = 2
+SPECIAL = 3
+
 # abilities
 BOND = 0
 SPY = 1
@@ -23,42 +29,40 @@ ABILITY = 3
 ACTUAL_STRENGTH = 4
 
 def parse_player(index):
-	if (index == 0):	
+	if (index == PLAYER):	
 		return 'Player'
-	elif (index == 1):
+	elif (index == COMPUTER):
 		return 'Computer'
 
 def parse_row(index):
-	if (index == 0):	
+	if (index == MELEE):	
 		return 'Melee'
-	elif (index == 1):
+	elif (index == RANGED):
 		return 'Ranged'
-	elif (index == 2):
+	elif (index == SEIGE):
 		return 'Seige'
-	elif (index == 3):
+	elif (index == SPECIAL):
 		return 'Special'
 
 def parse_special(index):
-	if (index == 0):
+	if (index == BOND):
 		return 'Bond'
-	elif (index == 1):
+	elif (index == SPY):
 		return 'Spy'
-	elif (index == 2):
+	elif (index == HERO):
 		return 'Hero'
-	elif (index == 3):
+	elif (index == BOOST):
 		return 'Boost'
-	elif (index == 4):
+	elif (index == MEDIC):
 		return 'Medic'
-	elif (index == 5):
+	elif (index == WEATHER):
 		return 'Weather'
 
 def parse_display_name(card):
 	if (card[ABILITY] is not None):
-		display_name = '(%i) %s [%s]' % (card[ACTUAL_STRENGTH], card[NAME], parse_special(card[ABILITY]))
+		return '(%i) %s [%s]' % (card[ACTUAL_STRENGTH], card[NAME], parse_special(card[ABILITY]))
 	else:
-		display_name = '(%i) %s' % (card[ACTUAL_STRENGTH], card[NAME])
-
-	return display_name
+		return '(%i) %s' % (card[ACTUAL_STRENGTH], card[NAME])
 
 def randomize_array(array):	
 	num = array.__len__()
@@ -70,9 +74,8 @@ def sort_cards(cards):
 	rows = [[],[],[],[]]
 	cards.sort()
 
-	for x in cards:
-		index = x[1];
-		rows[index].append(x)
+	for card in cards:
+		rows[card[ROW]].append(card)
 
 	return rows
 

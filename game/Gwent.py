@@ -22,8 +22,8 @@ class Gwent:
 			], 
 		}
 
-		# for player_index in range(2):
-		# 	self.trade_cycle(player_index)
+		for player_index in range(2):
+			self.trade_cycle(player_index)
 
 		for current_round in range(3):
 			self.start_round(current_round)
@@ -33,12 +33,19 @@ class Gwent:
 
 		player = self.game['players'][player_index]
 
-		self.__print_hand('\nYour cards are: ', player['cards'])
+		print 'Trading Round'
 
-		for _ in range(2):
+		title = '\n%s\'s turn' % _.parse_player(player_index)
+		self.__print_hand(title, player['cards'])
+
+		for i in range(2):
+			suffix = 'st' if i == 0 else 'nd'
+			print '\n%i%s trade' % (i + 1, suffix)
+
 			row, col = raw_input('\nWhat card would you like to trade? ').split()
 			self.__swap_card(player, int(row), int(col))
 			_.cls()
+			
 			self.__print_hand('\n\nYour cards are now: ', player['cards'])
 
 	def start_round(self, current_round):
