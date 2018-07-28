@@ -1,2 +1,5 @@
 *.sublime-*
 *.pyc
+node_modules/
+dist/
+old/
