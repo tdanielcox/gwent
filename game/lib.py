@@ -28,9 +28,10 @@ NAME = 0
 ROW = 1
 BASE_STRENGTH = 2
 ABILITY = 3
-IMAGE_PATH = 4
-ID = 5
-ACTUAL_STRENGTH = 6
+AFFECTS = 4
+IMAGE_PATH = 5
+ID = 6
+ACTUAL_STRENGTH = 7
 
 
 def parse_player(index):
@@ -102,3 +103,16 @@ def cls():
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+
+def get_duplicates(array):
+    seen = set()
+    dup = []
+
+    for x in array:
+        if x in seen:
+            dup.append(x)
+
+        seen.add(x)
+
+    return dup

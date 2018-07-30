@@ -146,9 +146,10 @@
     const ROW = 1;
     const STRENGTH = 2;
     const ABILITY = 3;
-    const IMAGE_PATH = 4;
-    const ID = 5;
-    const ACTUAL_STRENGTH = 6;
+    const AFFECTS = 4;
+    const IMAGE_PATH = 5;
+    const ID = 6;
+    const ACTUAL_STRENGTH = 7;
 
     const NONE = 0;
     const BOND = 1;

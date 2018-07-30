@@ -369,27 +369,50 @@ class Gwent:
 
             for row in rows:
                 has_weather = False
+                boost_modifier = 0
+                pre_bonded = []
 
                 for card in row:
                     if card[_.ABILITY] == _.WEATHER:
                         has_weather = True
 
+                    if card[_.ABILITY] == _.BOND:
+                        pre_bonded.append(card[_.AFFECTS])
+
+                    if card[_.ABILITY] == _.BOOST:
+                        boost_modifier += 1
+
+                bonded = _.get_duplicates(pre_bonded)
+
                 for card in row:
+                    bond_modifier = 1
+                    card_boost = copy.copy(boost_modifier)
+
+                    if card[_.AFFECTS] in bonded:
+                        bond_modifier = pre_bonded.count(card[_.AFFECTS])
+                        card[_.ACTUAL_STRENGTH] = int(card[_.BASE_STRENGTH]) * bond_modifier
+
+                    if card[_.ABILITY] == _.BOOST:
+                        card_boost -= 1
+
                     if has_weather:
                         if card[_.ABILITY] == _.HERO:
                             pass
                         elif card[_.BASE_STRENGTH] == 0:
                             pass
                         else:
-                            card[_.ACTUAL_STRENGTH] = 1
+                            card[_.ACTUAL_STRENGTH] = bond_modifier + card_boost
                     else:
-                        card[_.ACTUAL_STRENGTH] = card[_.BASE_STRENGTH]
+                        if bond_modifier > 1:
+                            card[_.ACTUAL_STRENGTH] += card_boost
+                        else:
+                            card[_.ACTUAL_STRENGTH] = card[_.BASE_STRENGTH] + card_boost
 
                     scores['totals'][x] += card[_.ACTUAL_STRENGTH]
                     scores['rows'][x][card[_.ROW]] += card[_.ACTUAL_STRENGTH]
                     scores['cards'][x][card[_.ROW]].append(card[_.ACTUAL_STRENGTH])
 
-        print scores
+        # print scores
 
         self.game['rounds'][current_round]['scores'] = scores
         return scores
