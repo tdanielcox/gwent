@@ -28,15 +28,10 @@
 </template>
 
 <style lang="scss">
-    body {
-        margin: 0;
-    }
-
     .container {
         width: 100%;
         height: 100vh;
         background: url("../assets/img/background.jpg") top left no-repeat;
-        /*background-size: contain;*/
         position: relative;
         overflow: hidden;
     }
@@ -73,7 +68,7 @@
     import PlayerHand from './PlayerHand';
 
     export default {
-        props: ['token'],
+        props: [],
         components: {
             BoardRow,
             Stats,
@@ -95,28 +90,28 @@
             },
         },
         methods: {
-            resizeContainer(e) {
-                const containerHeight = document.getElementById('container').offsetHeight;
-                const containerWidth = document.getElementById('container').offsetWidth;
-
-                const data = {
-                    height: window.innerHeight
-                        || document.documentElement.clientHeight
-                        || document.body.clientHeight,
-                    width: window.innerWidth
-                        || document.documentElement.clientWidth
-                        || document.body.clientWidth
-                };
-
-                const scale = Math.min(
-                    data.width / this.containerWidth,
-                    data.height / this.containerHeight
-                );
-
-                this.css = {
-                    // transform: "scale(" + scale + ")"
-                };
-            },
+            // resizeContainer(e) {
+                // const containerHeight = document.getElementById('container').offsetHeight;
+                // const containerWidth = document.getElementById('container').offsetWidth;
+                //
+                // const data = {
+                //     height: window.innerHeight
+                //         || document.documentElement.clientHeight
+                //         || document.body.clientHeight,
+                //     width: window.innerWidth
+                //         || document.documentElement.clientWidth
+                //         || document.body.clientWidth
+                // };
+                //
+                // const scale = Math.min(
+                //     data.width / this.containerWidth,
+                //     data.height / this.containerHeight
+                // );
+                //
+                // this.css = {
+                //     // transform: "scale(" + scale + ")"
+                // };
+            // },
         },
         mounted() {
             // let game = GameService.getGame();
@@ -125,8 +120,8 @@
             this.containerHeight = document.getElementById('container').offsetHeight;
             this.containerWidth = document.getElementById('container').offsetWidth;
 
-            this.resizeContainer(null);
-            window.addEventListener('resize', this.resizeContainer);
+            // this.resizeContainer(null);
+            // window.addEventListener('resize', this.resizeContainer);
         }
     }
 </script>

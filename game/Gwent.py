@@ -5,15 +5,19 @@ from cards import nr_cards
 
 
 class Gwent:
-    game = {}
-    __has_player = True
-    __computer_turn = False
+    def __init__(self):
+        self.game = {}
+        self.__has_player = True
+        self.__computer_turn = None
 
-    def start(self, player_count, computer_round_actions):
+    def new(self):
+        first_player = _.rand0_1()
+
         self.game = {
+            'id': _.generate_uuid(),
             'round': 0,
             'loser': None,
-            'current_player': 0,
+            'current_player': first_player,
             'rounds': [
                 self.__setup_round(),
                 self.__setup_round(),
@@ -25,6 +29,14 @@ class Gwent:
             ],
         }
 
+        return self.game
+
+    def load(self, blob):
+        self.game = blob
+
+        return self.game
+
+    def start(self, player_count, computer_round_actions):
         if not player_count:
             self.__has_player = False
             self.__computer_turn = computer_round_actions
@@ -63,15 +75,7 @@ class Gwent:
         if self.game['loser'] is not None:
             _.cls()
             print '%s Wins!' % _.parse_player(not self.game['loser'])
-        # return {
-        # 	'status': 'game_won',
-        # 	'data': _.parse_player(not self.game['loser'])
-        # }
         else:
-            if current_round == 0:
-                first = _.rand0_1()
-                self.game['current_player'] = int(first)
-
             self.game['round'] = current_round
 
             for x in range(60):
@@ -95,7 +99,7 @@ class Gwent:
 
         if player_index == _.COMPUTER and self.__computer_turn is not False:
             self.__computer_turn(self.game, current_round, self.game['players'][_.COMPUTER]['cards'])
-        elif player_index == _.PLAYER and self.__has_player == False: 
+        elif player_index == _.PLAYER and self.__has_player is not False:
             self.__computer_turn(self.game, current_round, self.game['players'][_.PLAYER]['cards'])
         else:
             self.__start_player_turn()
@@ -134,8 +138,17 @@ class Gwent:
 
             print _.SEPARATOR
             print '\nYou played: (%i) %s' % (card[_.BASE_STRENGTH], card[_.NAME])
+
+            try:
+                self.__factor_board()
+            except:
+                print 'error'
+
+            return self.game
         else:
             print '\nCANNOT FIND THIS CARD'
+
+            return self.game
 
     def pass_round(self, player_index):
         self.__run_pass(player_index)
@@ -369,6 +382,8 @@ class Gwent:
                     scores['totals'][x] += card[_.ACTUAL_STRENGTH]
                     scores['rows'][x][card[_.ROW]] += card[_.ACTUAL_STRENGTH]
                     scores['cards'][x][card[_.ROW]].append(card[_.ACTUAL_STRENGTH])
+
+        print scores
 
         self.game['rounds'][current_round]['scores'] = scores
         return scores

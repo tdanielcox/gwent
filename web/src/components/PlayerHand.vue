@@ -1,5 +1,6 @@
 <template>
     <div class="player-hand">
+        <card v-for="card in playerHand" :card="card" :key="card.id"></card>
     </div>
 </template>
 
@@ -24,13 +25,16 @@
 </style>
 
 <script>
-    // import GameService from '../services/GameService.js';
+    import Card from './Card';
 
     export default {
-        props: ['token'],
+        props: [],
+        components: {
+            Card
+        },
         computed: {
-            game() {
-                return this.$store.getters.game;
+            playerHand() {
+                return this.$store.getters.playerHand;
             }
         },
         methods: {

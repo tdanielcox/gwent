@@ -1,10 +1,55 @@
 // import Cookie from "js-cookie";
+import store from '../vuex/store';
+import DataService from './DataService';
 
 // const CookieKey = 'publistry_cart';
 // const CookieDomain = process.env.MIX_COOKIE_DOMAIN;
 // const CookieVersion = '3';
 
 const GameService = {
+    startGame() {
+        return DataService.startGame().then(response => {
+            const game = response.data;
+
+            store.dispatch('setGameId', game.id);
+            store.dispatch('setGame', game);
+
+            let cards = [];
+            game.players[0].cards.forEach(row => {
+                row.forEach(card => {
+                    cards.push(card);
+                });
+            });
+
+            store.dispatch('setPlayerHand', cards);
+        }).catch(err => {
+            console.log(err);
+        });
+    },
+
+    playCard(cardId) {
+        const gameId = store.getters.gameId;
+
+        return DataService.playCard(gameId, cardId).then(response => {
+            const game = response.data;
+
+            store.dispatch('setGame', game);
+
+            let cards = [];
+            game.players[0].cards.forEach(row => {
+                row.forEach(card => {
+                    cards.push(card);
+                });
+            });
+
+            console.log(game);
+
+            store.dispatch('setPlayerHand', cards);
+        }).catch(err => {
+            console.log(err);
+        });
+    }
+
     // getCart: token => {
     //     let cookie = CartService.getCookie();
     //     let cart = {};

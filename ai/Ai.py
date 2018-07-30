@@ -1,30 +1,26 @@
-import gym
-import random
-import numpy
-import tflearn
-from tflearn.layers.core import input_data, dropout, fully_connected
-from tflearn.layers.estimator import regression
-from statistics import mean, median
-from collections import Counter
+from game.Gwent import Gwent
+from game import lib as _
 
-LR = 1e-3
-env = gym.make('CartPole-v0')
-env.reset()
-goal_steps = 500
-score_requirement = 50
-intial_games = 10000
+def play_card(game, row, hand):
+    gwent = Gwent()
+    gwent.load(game)
 
-def random_games():
-	for episode in range(5):
-		env.reset()
-		for t in range(goal_steps):
-			env.render()
-			action = env.action_space.sample()
-			observation, reward, done, info = env.step(action)
+    index = 0
+    card = hand[row][index]
+    gwent.play_card(card[_.ID])
 
-			if done:
-				break
+def computer_round_actions(game, current_round, hand, row=0):
+    # print 'COMPUTERS TURN'
+    # print hand
 
-random_games()
+    try:
+        play_card(row, hand)
+    except:
+        row += 1
+
+        if (row > 2):
+            gwent.pass_round(game['current_player'])
+        else:
+            computer_round_actions(game, current_round, hand, row)
 
 

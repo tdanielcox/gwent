@@ -93,7 +93,7 @@ def sort_cards(cards):
 
 
 def rand0_1():
-    return round(random.uniform(0, 1))
+    return int(round(random.uniform(0, 1)))
 
 
 def cls():

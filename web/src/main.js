@@ -5,9 +5,9 @@ import store from './vuex/store.js';
 Vue.config.productionTip = false;
 Vue.use(Vuex);
 
-import Board from './components/Board.vue';
+import Game from './components/Game.vue';
 
-const app = new Vue({
+new Vue({
     el: '#app',
     store,
     data: {
@@ -16,5 +16,5 @@ const app = new Vue({
     watch: {
 
     },
-    render: h => h(Board)
+    render: h => h(Game)
 });
