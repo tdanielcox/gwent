@@ -2,6 +2,7 @@
     <div class="game">
         <board></board>
         <notification></notification>
+        <copyright></copyright>
     </div>
 </template>
 
@@ -17,12 +18,14 @@
     import GameService from '../services/GameService.js';
     import Board from './Board';
     import Notification from './Notification';
+    import Copyright from './Copyright';
 
     export default {
         props: [],
         components: {
             Board,
-            Notification
+            Notification,
+            Copyright
         },
         data() {
             return {

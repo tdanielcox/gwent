@@ -18,18 +18,20 @@ const parseGame = (game) => {
     });
     store.dispatch('setPlayerHand', playerCards);
 
-    let currPlayer = '';
+    let currPlayer = '', plural = '';
     switch (game.current_player) {
         default:
         case 0:
-            currPlayer = 'Player';
+            currPlayer = 'You';
+            plural = 'r';
             break;
         case 1:
-            currPlayer = 'Gwent.AI';
+            currPlayer = 'Gw[Ai]nt';
+            plural = '\'s';
             break;
     }
 
-    return currPlayer;
+    return { currPlayer, plural };
 };
 
 const GameService = {
@@ -37,16 +39,17 @@ const GameService = {
         return DataService.startGame().then(response => {
             const game = response.data;
 
-            const currPlayer = parseGame(game);
+            const info = parseGame(game);
             store.dispatch('setGameId', game.id);
 
-            return NotificationService.setNotification(currPlayer + ' will go first').then(() => {
+            return NotificationService.setNotification(info.currPlayer + ' will go first').then(() => {
                 if (game.current_player === 1) {
                     return GameService.aiTurn().then(_response => {
                         const game = _response.data;
-                        const currPlayer = parseGame(game);
+                        const info = parseGame(game);
+                        const player = info.currPlayer + '' + info.plural;
 
-                        store.dispatch('setNotification', currPlayer + '\'s turn');
+                        return NotificationService.setNotification(player + ' turn');
                     });
                 }
             });
@@ -60,14 +63,16 @@ const GameService = {
 
         return DataService.playCard(gameId, cardId).then(response => {
             const game = response.data;
-            const currPlayer = parseGame(game);
+            const info = parseGame(game);
+            const player = info.currPlayer + '' + info.plural;
 
-            return NotificationService.setNotification(currPlayer + '\'s turn').then(() => {
+            return NotificationService.setNotification(player + ' turn').then(() => {
                 GameService.aiTurn().then(_response => {
                     const game = _response.data;
-                    const currPlayer = parseGame(game);
+                    const info = parseGame(game);
+                    const player = info.currPlayer + '' + info.plural;
 
-                    store.dispatch('setNotification', currPlayer + '\'s turn');
+                    return NotificationService.setNotification(player + ' turn');
                 });
             });
         }).catch(err => {
@@ -80,11 +85,10 @@ const GameService = {
 
         return DataService.aiTurn(gameId).then(response => {
             const game = response.data;
-            const currPlayer = parseGame(game);
+            const info = parseGame(game);
+            const player = info.currPlayer + '' + info.plural;
 
-            return NotificationService.setNotification(currPlayer + '\'s turn').then(() => {
-
-            });
+            return NotificationService.setNotification(player + ' turn');
         }).catch(err => {
             console.log(err);
         });
