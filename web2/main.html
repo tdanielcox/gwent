@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Gwent.AI</title>
+        
+        <script type="text/javascript" src="http://localhost:8080/eel.js"></script>
+        <script type='text/javascript'>eel._host="http://localhost:8080"</script>
+
+        <link rel="stylesheet" type="text/css" href="/scripts/lib/jquery-ui/jquery-ui.min.css">
+        <link rel="stylesheet" type="text/css" href="/scripts/lib/jquery-ui/jquery-ui.structure.min.css">
+        <link rel="stylesheet" type="text/css" href="/scripts/lib/jquery-ui/jquery-ui.theme.min.css">
+        <!-- <link rel="stylesheet" type="text/css" href="/styles/style.css"> -->
+
+        <script src="/scripts/lib/jquery/jquery.min.js" type="text/javascript"></script>
+        <script src="/scripts/lib/jquery-ui/jquery-ui.min.js" type="text/javascript"></script>
+        <script src="/scripts/script.js" type="text/javascript"></script>
+
+        <style type="text/css">
+        body {
+            margin: 0;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            background: url("../images/background.jpg") top left no-repeat;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .row {
+            width: 50%;
+            height: 100vh;
+            float: left;
+        }
+
+        .card {
+            width: 80px; 
+            height: 120px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center center;
+            display: inline-block;
+        }
+
+        .card.dragging {
+            width: 130px;
+            height: 200px;
+        }
+
+        .card.in-play {
+            width: 80px;
+            height: 120px;
+            display: inline-block;
+            margin: 0 2px;
+        }
+
+        .computer-container,
+        .player-container {
+            height: 389px;
+            width: 1570px;
+            position: absolute;
+            top: 16px;
+            left: 90px;
+        }
+
+        .player-container {
+            top: 435px;
+            height: 550px;
+        }
+
+        .stats {
+            width: 248px;
+            height: 92px;
+            position: absolute;
+            top: 288px;
+            left: 145px;
+        }
+
+        .stats .card-count-container {
+            width: 38px;
+            height: 40px;
+            top: 47px;
+            left: 36px;
+            position: absolute;
+            text-align: center;
+        }
+
+        .stats .loss-indicator {
+            width: 43px;
+            height: 44px;
+            top: 45px;
+            left: 83px;
+            position: absolute;
+            text-align: center;
+        }
+
+        .stats .loss-indicator.not-lost {
+            background: url("../images/jewel-filled.png") no-repeat center center;
+        }
+
+        .stats .loss-indicator-2 {
+            left: 126px;
+        }
+
+        .stats .total-points-container {
+            height: 40px;
+            width: 40px;
+            top: 8px;
+            left: 198px;
+            border-radius: 20px;
+            position: absolute;
+            text-align: center;
+        }
+
+        .player-stats {
+            height: 112px;
+            top: 249px;
+        } 
+
+        .player-stats .card-count-container {
+            top: 7px;
+        }
+
+        .player-stats .loss-indicator {
+            top: 2px;
+        }
+
+        .player-stats .total-points-container {
+            top: 30px;
+        }
+
+        .computer-board,
+        .player-board {
+            height: 389px;
+            width: 1015px;
+            position: absolute;
+            top: 0;
+            left: 410px;
+        }
+
+        .row {
+            height: 120px;
+            width: 940px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            text-align: center;
+        }
+
+        .row > div {
+            position: absolute;
+            text-align: center;
+        }
+
+        .computer-board .row-1,
+        .player-board .row-1 {
+            top: 0;
+        }
+
+        .computer-board .row-2,
+        .player-board .row-2 {
+            top: 131px;
+        }
+
+        .computer-board .row-3,
+        .player-board .row-3 {
+            top: 269px;
+        }
+
+        .row-points-container {
+            height: 40px;
+            width: 40px;
+            top: 38px;
+            left: 16px;
+            border-radius: 20px;
+        }
+
+        .commander-horn-container {
+            height: 120px;
+            width: 120px;
+            top: 0;
+            left: 77px;
+        }
+
+        .cards-in-play-container {
+            height: 120px;
+            width: 805px;
+            top: 0;
+            left: 210px;
+        }
+
+        .cards-in-play-container.drop-hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .graveyard {
+            position: absolute;
+            top: 55px;
+            left: 1454px;
+            width: 110px;
+            height: 144px;
+        }
+
+        .player-container .graveyard {
+            top: 393px;
+        }
+
+        .player-hand {
+            background: rgba(0,0,0,0.6);
+            height: 120px;
+            width: 937px;
+            position: absolute;
+            top: 410px;
+            left: 487px;
+            text-align: center;
+        }
+
+        .player-hand .card {
+            vertical-align: top;
+        }
+
+        .player-hand.drop-hover {
+            background: rgba(255,255,255,0.4);
+        }
+
+        .player-board .row-1 .row-points-container {
+            top: 36px;
+        }
+        </style>
+    </head>
+    
+    <body>
+        <div class="container">
+
+            <div class="computer-container">
+                <div class="stats computer-stats">
+                    <div class="card-count-container"></div>
+                    <div class="loss-indicators-container">
+                        <div class="loss-indicator loss-indicator-1 not-lost"></div>
+                        <div class="loss-indicator loss-indicator-2 not-lost"></div>
+                    </div>
+                    <div class="total-points-container"></div>
+                </div>
+
+                <div class="board computer-board">
+                    <div class="row row-seige row-1">
+                        <div class="row-points-container"></div>
+                        <div class="commander-horn-container"></div>
+
+                        <div class="cards-in-play-container">
+                        </div>
+                    </div>
+
+                    <div class="row row-ranged row-2">
+                        <div class="row-points-container"></div>
+                        <div class="commander-horn-container"></div>
+
+                        <div class="cards-in-play-container">
+                        </div>
+                    </div>
+
+                    <div class="row row-melee row-3">
+                        <div class="row-points-container"></div>
+                        <div class="commander-horn-container"></div>
+
+                        <div class="cards-in-play-container">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="graveyard"></div>
+            </div>
+
+            <div class="player-container">
+                <div class="stats player-stats">
+                    <div class="card-count-container"></div>
+                    <div class="loss-indicators-container">
+                        <div class="loss-indicator loss-indicator-1 not-lost"></div>
+                        <div class="loss-indicator loss-indicator-2 not-lost"></div>
+                    </div>
+                    <div class="total-points-container"></div>
+                </div>
+
+                <div class="board player-board">
+                    <div class="row row-melee row-1">
+                        <div class="row-points-container"></div>
+                        <div class="commander-horn-container"></div>
+
+                        <div class="cards-in-play-container">
+                        </div>
+                    </div>
+
+                    <div class="row row-ranged row-2">
+                        <div class="row-points-container"></div>
+                        <div class="commander-horn-container"></div>
+
+                        <div class="cards-in-play-container">
+                        </div>
+                    </div>
+
+                    <div class="row row-seige row-3">
+                        <div class="row-points-container"></div>
+                        <div class="commander-horn-container"></div>
+
+                        <div class="cards-in-play-container">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="graveyard"></div>
+
+                <div class="player-hand">
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
