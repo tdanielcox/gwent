@@ -19,9 +19,15 @@
         vertical-align: top;
     }
 
-    .player-hand.drop-hover {
-        background: rgba(255,255,255,0.4);
+    @mixin stack-cards($max_count, $offset) {
+        .player-hand .card:nth-last-child(n + #{$max_count}),
+        .player-hand .card:nth-last-child(n + #{$max_count}) ~ * {
+            margin-left: #{$offset};
+        }
     }
+
+    @include stack-cards(12, -20px);
+    @include stack-cards(14, -30px);
 </style>
 
 <script>

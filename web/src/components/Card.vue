@@ -5,12 +5,13 @@
          :class="cardClasses"
          @click="focusCard">
 
+        <div class="actual-strength">{{ cardActualStrength }}</div>
+
         <div class="confirm-box">
             <div class="inner">
                 <div class="card-details">
                     <h3>{{ cardName }}</h3>
-                    <p v-if="cardStrength">Strength: {{ cardStrength }}</p>
-                    <p v-if="cardAbility">Ability: {{ cardAbility }}</p>
+                    <p v-if="cardAbility">{{ cardAbility }}</p>
                 </div>
 
                 <h2>Play this card?</h2>
@@ -63,6 +64,27 @@
                 transform: scale(1);
                 z-index: 1;
             }
+        }
+
+        .actual-strength {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            z-index: 100;
+            line-height: 12px;
+            font-size: 0.8rem;
+            background: rgb(255,255,255);
+            background: -moz-linear-gradient(-45deg, rgba(255,255,255,1) 53%, rgba(142,142,142,1) 100%);
+            background: -webkit-linear-gradient(-45deg, rgba(255,255,255,1) 53%,rgba(142,142,142,1) 100%);
+            background: linear-gradient(135deg, rgba(255,255,255,1) 53%,rgba(142,142,142,1) 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#8e8e8e',GradientType=1 );
+        }
+
+        &.noStrength .actual-strength {
+            display: none;
         }
 
         .confirm-box {
@@ -151,7 +173,8 @@
                 return {
                     selected: this.currentFocusedCard === this.card[ID],
                     inBackground: this.currentFocusedCard && this.currentFocusedCard !== this.card[ID],
-                    inPlay: this.inPlay
+                    inPlay: this.inPlay,
+                    noStrength: this.card[ABILITY] === WEATHER || this.card[ABILITY] === HERO,
                 };
             },
             css() {
@@ -162,11 +185,11 @@
             cardName() {
                 return this.card[NAME];
             },
-            cardStrength() {
-                return this.card[STRENGTH];
-            },
             cardId() {
                 return this.card[ID];
+            },
+            cardActualStrength() {
+                return this.card[ACTUAL_STRENGTH];
             },
             cardAbility() {
                 switch (this.card[ABILITY]) {
@@ -204,7 +227,7 @@
                 return images('./' + this.card[IMAGE_PATH])
             },
             focusCard() {
-                if (this.currentFocusedCard === this.card[ID]) {
+                if (this.inPlay || this.currentFocusedCard === this.card[ID]) {
                     this.$store.dispatch('setFocusedCardId', null);
                 } else {
                     this.$store.dispatch('setFocusedCardId', this.card[ID]);

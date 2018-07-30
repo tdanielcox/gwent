@@ -1,11 +1,11 @@
 <template>
     <div class="stats" :class="statsClass">
-        <div class="card-count-container"></div>
+        <div class="card-count-container">{{ cardsLeft }}</div>
         <div class="loss-indicators-container">
             <div class="loss-indicator loss-indicator-1 not-lost"></div>
             <div class="loss-indicator loss-indicator-2 not-lost"></div>
         </div>
-        <div class="total-points-container"></div>
+        <div class="total-points-container">{{ roundScore }}</div>
     </div>
 </template>
 
@@ -25,6 +25,10 @@
         left: 36px;
         position: absolute;
         text-align: center;
+        color: #A59365;
+        font-size: 2.8rem;
+        line-height: 40px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
 
     .stats .loss-indicator {
@@ -52,6 +56,13 @@
         border-radius: 20px;
         position: absolute;
         text-align: center;
+        line-height: 40px;
+        font-size: 2.8rem;
+        font-weight: bold;
+        text-shadow: -1px -1px 0 rgba(255,255,255,0.6),
+            1px -1px 0 rgba(255,255,255,0.6),
+            -1px 1px 0 rgba(255,255,255,0.6),
+            1px 1px 0 rgba(255,255,255,0.6);
     }
 
     .player-stats {
@@ -83,6 +94,30 @@
             },
             statsClass() {
                 return this.statsFor + '-stats';
+            },
+            roundScore() {
+                const currRound = this.game.round;
+                if (this.game && this.game.hasOwnProperty('rounds') && this.game.rounds[currRound].scores.hasOwnProperty('totals')) {
+                    const playerIndex = this.statsFor === 'player' ? 0 : 1;
+                    return this.game.rounds[currRound].scores.totals[playerIndex];
+                } else {
+                    return 0;
+                }
+            },
+            cardsLeft() {
+                const playerIndex = this.statsFor === 'player' ? 0 : 1;
+                if (this.game && this.game.hasOwnProperty('players')) {
+                    const rows = this.game.players[playerIndex].cards;
+                    let cardCount = 0;
+
+                    rows.forEach(row => {
+                        cardCount += row.length;
+                    });
+
+                    return cardCount;
+                } else {
+                    return 0;
+                }
             }
         },
         methods: {

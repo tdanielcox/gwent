@@ -10,6 +10,8 @@
 </template>
 
 <style lang="scss">
+
+
     .row {
         height: 120px;
         width: 1018px;
@@ -24,7 +26,7 @@
         text-align: center;
     }
 
-    .computer-board .row-1,
+    .computer-board .row-3,
     .player-board .row-1 {
         top: 0;
     }
@@ -34,7 +36,7 @@
         top: 131px;
     }
 
-    .computer-board .row-3,
+    .computer-board .row-1,
     .player-board .row-3 {
         top: 269px;
     }
@@ -45,6 +47,12 @@
         top: 38px;
         left: 16px;
         border-radius: 20px;
+        line-height: 40px;
+        font-size: 2.8rem;
+        text-shadow: -1px -1px 0 rgba(255,255,255,0.6),
+            1px -1px 0 rgba(255,255,255,0.6),
+            -1px 1px 0 rgba(255,255,255,0.6),
+            1px 1px 0 rgba(255,255,255,0.6);
     }
 
     .commander-horn-container {
@@ -61,13 +69,22 @@
         left: 210px;
     }
 
-    .cards-in-play-container.drop-hover {
-        background: rgba(255,255,255,0.4);
-    }
-
     .player-board .row-1 .row-points-container {
         top: 36px;
     }
+
+    @mixin stack-cards($max_count, $offset) {
+        .cards-in-play-container .card:nth-last-child(n + #{$max_count}),
+        .cards-in-play-container .card:nth-last-child(n + #{$max_count}) ~ * {
+            margin-left: #{$offset};
+        }
+    }
+
+    @include stack-cards(10, -20px);
+    @include stack-cards(12, -25px);
+    @include stack-cards(14, -35px);
+    @include stack-cards(16, -45px);
+    @include stack-cards(18, -50px);
 </style>
 
 <script>
@@ -104,12 +121,10 @@
             rowScore() {
                 const currRound = this.game.round;
                 if (this.game && this.game.hasOwnProperty('rounds') && this.game.rounds[currRound].scores.hasOwnProperty('rows')) {
-
                     const playerIndex = this.rowFor === 'player' ? 0 : 1;
-
                     return this.game.rounds[currRound].scores.rows[playerIndex][this.rowIndex - 1];
                 } else {
-                    return []
+                    return 0;
                 }
             }
         },
