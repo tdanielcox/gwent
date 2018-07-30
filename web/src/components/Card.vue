@@ -73,7 +73,7 @@
             width: 12px;
             height: 12px;
             border-radius: 6px;
-            z-index: 100;
+            z-index: 25;
             line-height: 12px;
             font-size: 0.8rem;
             background: rgb(255,255,255);

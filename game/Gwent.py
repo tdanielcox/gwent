@@ -107,6 +107,14 @@ class Gwent:
         player_index = not self.game['current_player']
         self.game['current_player'] = player_index
 
+        return self.game
+
+    def ai_turn(self):
+        current_round = self.game['round']
+        self.__computer_turn(self.game, current_round, self.game['players'][_.COMPUTER]['cards'])
+
+        return self.game
+
     def play_card(self, card_id):
         current_round = self.game['round']
         player_index = self.game['current_player']
@@ -143,12 +151,10 @@ class Gwent:
                 self.__factor_board()
             except:
                 print 'error'
-
-            return self.game
         else:
             print '\nCANNOT FIND THIS CARD'
 
-            return self.game
+        return self.game
 
     def pass_round(self, player_index):
         self.__run_pass(player_index)

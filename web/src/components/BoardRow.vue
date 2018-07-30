@@ -10,8 +10,6 @@
 </template>
 
 <style lang="scss">
-
-
     .row {
         height: 120px;
         width: 1018px;

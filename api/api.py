@@ -28,7 +28,6 @@ def api_start_game():
 @app.route("/get-game", methods=['GET'])
 def api_get_game():
     game_id = request.args.get('game_id')
-    print game_id
     game = get_game(game_id)
 
     return json.dumps(game)
@@ -39,13 +38,36 @@ def api_play_card():
     game_id = request.args.get('game_id')
     request_data = request.get_json()
     card_id = request_data['card_id']
-
     game = get_game(game_id)
 
     gwent = Gwent()
     gwent.load(game)
     gwent.start(1, computer_round_actions)
     game = gwent.play_card(card_id)
+
+    print game['current_player']
+
+    player_index = int(not game['current_player'])
+    game['current_player'] = player_index
+    game = save_game(game)
+
+    return json.dumps(game)
+
+
+@app.route("/ai-turn", methods=['GET'])
+def api_ai_turn():
+    game_id = request.args.get('game_id')
+    game = get_game(game_id)
+
+    gwent = Gwent()
+    gwent.load(game)
+    gwent.start(1, computer_round_actions)
+    game = gwent.ai_turn()
+
+    print game['current_player']
+
+    player_index = int(not game['current_player'])
+    game['current_player'] = player_index
     game = save_game(game)
 
     return json.dumps(game)

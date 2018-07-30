@@ -1,27 +1,55 @@
 // import Cookie from "js-cookie";
 import store from '../vuex/store';
 import DataService from './DataService';
+import NotificationService from './NotificationService';
 
 // const CookieKey = 'publistry_cart';
 // const CookieDomain = process.env.MIX_COOKIE_DOMAIN;
 // const CookieVersion = '3';
+
+const parseGame = (game) => {
+    store.dispatch('setGame', game);
+
+    let playerCards = [];
+    game.players[0].cards.forEach(row => {
+        row.forEach(card => {
+            playerCards.push(card);
+        });
+    });
+    store.dispatch('setPlayerHand', playerCards);
+
+    let currPlayer = '';
+    switch (game.current_player) {
+        default:
+        case 0:
+            currPlayer = 'Player';
+            break;
+        case 1:
+            currPlayer = 'Gwent.AI';
+            break;
+    }
+
+    return currPlayer;
+};
 
 const GameService = {
     startGame() {
         return DataService.startGame().then(response => {
             const game = response.data;
 
+            const currPlayer = parseGame(game);
             store.dispatch('setGameId', game.id);
-            store.dispatch('setGame', game);
 
-            let cards = [];
-            game.players[0].cards.forEach(row => {
-                row.forEach(card => {
-                    cards.push(card);
-                });
+            return NotificationService.setNotification(currPlayer + ' will go first').then(() => {
+                if (game.current_player === 1) {
+                    return GameService.aiTurn().then(_response => {
+                        const game = _response.data;
+                        const currPlayer = parseGame(game);
+
+                        store.dispatch('setNotification', currPlayer + '\'s turn');
+                    });
+                }
             });
-
-            store.dispatch('setPlayerHand', cards);
         }).catch(err => {
             console.log(err);
         });
@@ -32,19 +60,31 @@ const GameService = {
 
         return DataService.playCard(gameId, cardId).then(response => {
             const game = response.data;
+            const currPlayer = parseGame(game);
 
-            store.dispatch('setGame', game);
+            return NotificationService.setNotification(currPlayer + '\'s turn').then(() => {
+                GameService.aiTurn().then(_response => {
+                    const game = _response.data;
+                    const currPlayer = parseGame(game);
 
-            let cards = [];
-            game.players[0].cards.forEach(row => {
-                row.forEach(card => {
-                    cards.push(card);
+                    store.dispatch('setNotification', currPlayer + '\'s turn');
                 });
             });
+        }).catch(err => {
+            console.log(err);
+        });
+    },
 
-            console.log(game);
+    aiTurn() {
+        const gameId = store.getters.gameId;
 
-            store.dispatch('setPlayerHand', cards);
+        return DataService.aiTurn(gameId).then(response => {
+            const game = response.data;
+            const currPlayer = parseGame(game);
+
+            return NotificationService.setNotification(currPlayer + '\'s turn').then(() => {
+
+            });
         }).catch(err => {
             console.log(err);
         });
@@ -63,85 +103,6 @@ const GameService = {
     //     }
 
     //     return CartService.setupCart(cart);
-    // },
-
-    // addItemToCart: (token, item, quantity) => {
-    //     let cookie = CartService.getCookie();
-    //     let cart = {};
-    //     let _quantity = quantity;
-
-    //     if (cookie[token]) {
-    //         for (let key in cookie[token]) {
-    //             if (cookie[token].hasOwnProperty(key)) {
-    //                 cart[key] = cookie[token][key];
-    //             }
-    //         }
-
-    //         if (cookie[token][item.id]) {
-    //             _quantity += cookie[token][item.id].quantity;
-    //         }
-    //     } else {
-    //         cookie[token] = {};
-    //         cart = {};
-    //     }
-
-    //     cart[item.type +'_'+ item.id] = {
-    //         item_id: item.id,
-    //         item_type: item.type,
-    //         title: item.title,
-    //         quantity: _quantity,
-    //         unit_price: item.price
-    //     };
-
-    //     cookie[token] = cart;
-
-    //     Cookie.set(CookieKey, cookie, { domain: CookieDomain });
-
-    //     return CartService.setupCart(cart);
-    // },
-
-    // removeItemFromCart: (token, item_type, item_id) => {
-    //     let cookie = CartService.getCookie();
-    //     let cart = null;
-
-    //     if (cookie && cookie[token]) {
-    //         cart = {};
-
-    //         for (let key in cookie[token]) {
-    //             if (cookie[token].hasOwnProperty(key)) {
-    //                 cart[key] = cookie[token][key];
-    //             }
-    //         }
-    //     }
-
-    //     if (cart && cart[item_type +'_'+ item_id]) {
-    //         delete cart[item_type +'_'+ item_id];
-    //     }
-
-    //     cookie[token] = cart;
-
-    //     Cookie.set(CookieKey, cookie, { domain: CookieDomain });
-
-    //     return CartService.setupCart(cart);
-    // },
-
-    // setupCart: (cart) => {
-    //     let totalItems = 0;
-    //     let totalPrice = 0;
-
-    //     if (cart) {
-    //         for (let item in cart) {
-    //             if (cart.hasOwnProperty(item)) {
-    //                 totalItems += cart[item].quantity;
-    //                 totalPrice += cart[item].quantity * cart[item].unit_price;
-    //             }
-    //         }
-    //     }
-    //     return {
-    //         items: cart,
-    //         total_items: totalItems,
-    //         total_price: totalPrice,
-    //     };
     // },
 
     // getCookie: () => {

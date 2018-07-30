@@ -1,5 +1,8 @@
 <template>
-    <board></board>
+    <div class="game">
+        <board></board>
+        <notification></notification>
+    </div>
 </template>
 
 <style lang="scss">
@@ -13,11 +16,13 @@
 <script>    
     import GameService from '../services/GameService.js';
     import Board from './Board';
+    import Notification from './Notification';
 
     export default {
         props: [],
         components: {
-            Board
+            Board,
+            Notification
         },
         data() {
             return {

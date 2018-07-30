@@ -1,5 +1,5 @@
 <template>
-    <div id="container" class="container" :style="css">
+    <div class="container">
         <div class="computer-container">
             <stats :stats-for="'computer'"></stats>
 
@@ -77,11 +77,7 @@
         },
         data() {
             return {
-                css: {
-                    // transform: "scale(1)"
-                },
-                containerHeight: null,
-                containerWidth: null,
+
             }
         },
         computed: {
@@ -90,38 +86,10 @@
             },
         },
         methods: {
-            // resizeContainer(e) {
-                // const containerHeight = document.getElementById('container').offsetHeight;
-                // const containerWidth = document.getElementById('container').offsetWidth;
-                //
-                // const data = {
-                //     height: window.innerHeight
-                //         || document.documentElement.clientHeight
-                //         || document.body.clientHeight,
-                //     width: window.innerWidth
-                //         || document.documentElement.clientWidth
-                //         || document.body.clientWidth
-                // };
-                //
-                // const scale = Math.min(
-                //     data.width / this.containerWidth,
-                //     data.height / this.containerHeight
-                // );
-                //
-                // this.css = {
-                //     // transform: "scale(" + scale + ")"
-                // };
-            // },
+
         },
         mounted() {
-            // let game = GameService.getGame();
-            // this.$store.dispatch('setGame', game);
 
-            this.containerHeight = document.getElementById('container').offsetHeight;
-            this.containerWidth = document.getElementById('container').offsetWidth;
-
-            // this.resizeContainer(null);
-            // window.addEventListener('resize', this.resizeContainer);
         }
     }
 </script>
