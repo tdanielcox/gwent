@@ -22,6 +22,7 @@ HERO = 3
 BOOST = 4
 MEDIC = 5
 WEATHER = 6
+SCORCH = 7
 
 # card array
 NAME = 0

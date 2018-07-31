@@ -156,6 +156,7 @@
     const SPY = 2;
     const HERO = 3;
     const WEATHER = 6;
+    const SCORCH = 7;
 
     export default {
         props: ['card', 'inPlay'],
@@ -175,7 +176,9 @@
                     selected: this.currentFocusedCard === this.card[ID],
                     inBackground: this.currentFocusedCard && this.currentFocusedCard !== this.card[ID],
                     inPlay: this.inPlay,
-                    noStrength: this.card[ABILITY] === WEATHER || this.card[ABILITY] === HERO,
+                    noStrength: this.card[ABILITY] === WEATHER
+                                || this.card[ABILITY] === HERO
+                                || this.card[ABILITY] === SCORCH,
                 };
             },
             css() {

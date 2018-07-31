@@ -132,6 +132,8 @@ class Gwent:
             if card[_.ROW] == 3:
                 if card[_.ABILITY] == _.WEATHER:
                     self.__run_clear_weather()
+                if card[_.ABILITY] == _.SCORCH:
+                    self.__run_scorch()
             else:
                 if card[_.ABILITY] == _.SPY:
                     self.__run_spy(player_index)
@@ -508,6 +510,39 @@ class Gwent:
             del player['unused_cards'][card_index]
             player['cards'][new_row].append(new_card)
             player['cards'][new_row].sort()
+
+    def __run_scorch(self):
+        current_round = self.game['round']
+        board = self.game['rounds'][current_round]['cards']
+        top_points = 0
+        scorch_cards = []
+
+        for player_index in range(2):
+            rows = board[player_index]
+
+            for row in rows:
+                for card in row:
+                    if card[_.ABILITY] is not _.HERO and card[_.ACTUAL_STRENGTH] > top_points:
+                        top_points = card[_.ACTUAL_STRENGTH]
+
+        for player_index in range(2):
+            rows = board[player_index]
+
+            for row in rows:
+                for card in row:
+                    if card[_.ABILITY] is not _.HERO and card[_.ACTUAL_STRENGTH] == top_points:
+                        scorch_cards.append(card[_.ID])
+
+        for player_index in range(2):
+            for card_id in scorch_cards:
+                card = self.__get_card(board[player_index], card_id)
+
+                if card is not None:
+                    row = card[1]
+                    index = card[2]
+
+                    del board[player_index][row][index]
+                    #todo: add to graveyard
 
     def __run_pass(self, player_index):
         current_round = self.game['round']

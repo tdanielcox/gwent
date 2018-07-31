@@ -1,15 +1,13 @@
 # coding=utf-8
-# [card, row66strength, ability, image]
+# [card, row, strength, ability, affects, image]
 
 nr_cards = [
-    ['Biting Frost', 0, 0, 6, 0, 'neutral/biting-frost.png'],
-    ['Biting Frost', 0, 0, 6, 0, 'neutral/biting-frost.png'],
-    ['Redanian Foot Soldier', 0, 1, 0, 0, 'northern-realms/redanian-foot-soldier.png'],
-    ['Redanian Foot Soldier', 0, 1, 0, 0, 'northern-realms/redanian-foot-soldier.png'],
-    ['Poor Fucking Infantry', 0, 1, 1, 1, 'northern-realms/poor-fucking-infantry.png'],
-    ['Poor Fucking Infantry', 0, 1, 1, 1, 'northern-realms/poor-fucking-infantry.png'],
-    ['Poor Fucking Infantry', 0, 1, 1, 1, 'northern-realms/poor-fucking-infantry.png'],
-    ['Yarpen Zigrin', 0, 2, 0, 0, 'northern-realms/yarpen-zigrin.png'],
+    # ['Redanian Foot Soldier', 0, 1, 0, 0, 'northern-realms/redanian-foot-soldier.png'],
+    # ['Redanian Foot Soldier', 0, 1, 0, 0, 'northern-realms/redanian-foot-soldier.png'],
+    # ['Poor Fucking Infantry', 0, 1, 1, 1, 'northern-realms/poor-fucking-infantry.png'],
+    # ['Poor Fucking Infantry', 0, 1, 1, 1, 'northern-realms/poor-fucking-infantry.png'],
+    # ['Poor Fucking Infantry', 0, 1, 1, 1, 'northern-realms/poor-fucking-infantry.png'],
+    # ['Yarpen Zigrin', 0, 2, 0, 0, 'northern-realms/yarpen-zigrin.png'],
     ['Blue Stripes Commando', 0, 4, 1, 2, 'northern-realms/blue-stripes-commando.png'],
     ['Blue Stripes Commando', 0, 4, 1, 2, 'northern-realms/blue-stripes-commando.png'],
     ['Blue Stripes Commando', 0, 4, 1, 2, 'northern-realms/blue-stripes-commando.png'],
@@ -21,8 +19,7 @@ nr_cards = [
     ['John Natalis', 0, 10, 3, 0, 'northern-realms/john-natalis.png'],
     ['Vernon Roche', 0, 10, 3, 0, 'northern-realms/vernon-roche.png'],
 
-    ['Impenetrable Fog', 1, 0, 6, 0, 'neutral/impenetrable-fog.png'],
-    ['Impenetrable Fog', 1, 0, 6, 0, 'neutral/impenetrable-fog.png'],
+
     ['Sabrina Glevissig', 1, 4, 0, 0, 'northern-realms/sabrina-glevissig.png'],
     ['Sheldon Skaggs', 1, 4, 0, 0, 'northern-realms/sheldon-skaggs.png'],
     ['Sile de Tansarville', 1, 5, 0, 0, 'northern-realms/sile-de-tansarville.png'],
@@ -33,9 +30,7 @@ nr_cards = [
     ['Dethmold', 1, 6, 0, 0, 'northern-realms/dethmold.png'],
     ['Philippa Eilhart', 1, 10, 3, 0, 'northern-realms/philippa-eilhart.png'],
 
-    ['Torrential Rain', 2, 0, 6, 0, 'neutral/torrential-rain.png'],
-    ['Torrential Rain', 2, 0, 6, 0, 'neutral/torrential-rain.png'],
-    ['Kaedweni Siege Expert', 2, 1, 4, 0, 'northern-realms/kaedweni-siege-expert.png'],
+    # ['Kaedweni Siege Expert', 2, 1, 4, 0, 'northern-realms/kaedweni-siege-expert.png'],
     ['Kaedweni Siege Expert', 2, 1, 4, 0, 'northern-realms/kaedweni-siege-expert.png'],
     ['Kaedweni Siege Expert', 2, 1, 4, 0, 'northern-realms/kaedweni-siege-expert.png'],
     ['Thaler', 2, 1, 2, 0, 'northern-realms/thaler.png'],
@@ -48,6 +43,14 @@ nr_cards = [
     ['Catapult', 2, 8, 1, 4, 'northern-realms/catapult.png'],
     ['Catapult', 2, 8, 1, 4, 'northern-realms/catapult.png'],
 
+    ['Biting Frost', 0, 0, 6, 0, 'neutral/biting-frost.png'],
+    # ['Biting Frost', 0, 0, 6, 0, 'neutral/biting-frost.png'],
+    ['Impenetrable Fog', 1, 0, 6, 0, 'neutral/impenetrable-fog.png'],
+    # ['Impenetrable Fog', 1, 0, 6, 0, 'neutral/impenetrable-fog.png'],
+    ['Torrential Rain', 2, 0, 6, 0, 'neutral/torrential-rain.png'],
+    # ['Torrential Rain', 2, 0, 6, 0, 'neutral/torrential-rain.png'],
     ['Clear Weather', 3, 0, 6, 0, 'neutral/clear-weather.png'],
-    ['Clear Weather', 3, 0, 6, 0, 'neutral/clear-weather.png'],
+    # ['Clear Weather', 3, 0, 6, 0, 'neutral/clear-weather.png'],
+    ['Scorch', 3, 0, 7, 0, 'neutral/scorch.png'],
+    ['Scorch', 3, 0, 7, 0, 'neutral/scorch.png'],
 ]

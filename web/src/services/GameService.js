@@ -72,7 +72,9 @@ const GameService = {
                     const info = parseGame(game);
                     const player = info.currPlayer + '' + info.plural;
 
-                    return NotificationService.setNotification(player + ' turn');
+                    NotificationService.setNotification(player + ' turn');
+
+                    return _response;
                 });
             });
         }).catch(err => {
@@ -88,7 +90,9 @@ const GameService = {
             const info = parseGame(game);
             const player = info.currPlayer + '' + info.plural;
 
-            return NotificationService.setNotification(player + ' turn');
+            NotificationService.setNotification(player + ' turn');
+
+            return response;
         }).catch(err => {
             console.log(err);
         });
