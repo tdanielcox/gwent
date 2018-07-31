@@ -44,11 +44,20 @@ def api_play_card():
     gwent.load(game)
     gwent.start(1, computer_round_actions)
     game = gwent.play_card(card_id)
+    game = save_game(game)
 
-    print game['current_player']
+    return json.dumps(game)
 
-    player_index = int(not game['current_player'])
-    game['current_player'] = player_index
+
+@app.route("/pass-round", methods=['POST'])
+def api_pass_round():
+    game_id = request.args.get('game_id')
+    game = get_game(game_id)
+
+    gwent = Gwent()
+    gwent.load(game)
+    gwent.start(1, computer_round_actions)
+    game = gwent.pass_round(0)
     game = save_game(game)
 
     return json.dumps(game)
@@ -63,11 +72,6 @@ def api_ai_turn():
     gwent.load(game)
     gwent.start(1, computer_round_actions)
     game = gwent.ai_turn()
-
-    print game['current_player']
-
-    player_index = int(not game['current_player'])
-    game['current_player'] = player_index
     game = save_game(game)
 
     return json.dumps(game)

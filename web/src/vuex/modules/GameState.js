@@ -1,11 +1,13 @@
 const state = {
     gameId: '',
-    game: {},
+    game: false,
     playerHand: [],
     computerHand: [],
     focusedCardId: null,
     notification: null,
-    notificationVisible: false
+    notificationVisible: false,
+    currentRound: 0,
+    currentPlayer: 0,
 };
 
 const getters = {
@@ -29,6 +31,12 @@ const getters = {
     },
     notificationVisible: state => {
         return state.notificationVisible;
+    },
+    currentRound: state => {
+        return state.currentRound;
+    },
+    currentPlayer: state => {
+        return state.currentPlayer;
     }
 };
 
@@ -53,6 +61,12 @@ const mutations = {
     },
     SET_NOTIFICATION_VISIBLE(state, visible) {
         state.notificationVisible = visible;
+    },
+    SET_CURRENT_ROUND(state, currentRound) {
+        state.currentRound = currentRound;
+    },
+    SET_CURRENT_PLAYER(state, currentPlayer) {
+        state.currentPlayer = currentPlayer;
     }
 };
 
@@ -77,6 +91,12 @@ const actions = {
     },
     setNotificationVisible(context, visible) {
         context.commit('SET_NOTIFICATION_VISIBLE', visible);
+    },
+    setCurrentRound(context, currentRound) {
+        context.commit('SET_CURRENT_ROUND', currentRound);
+    },
+    setCurrentPlayer(context, currentPlayer) {
+        context.commit('SET_CURRENT_PLAYER', currentPlayer);
     }
 };
 

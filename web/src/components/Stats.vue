@@ -2,9 +2,10 @@
     <div class="stats" :class="statsClass">
         <div class="card-count-container">{{ cardsLeft }}</div>
         <div class="loss-indicators-container">
-            <div class="loss-indicator loss-indicator-1 not-lost"></div>
-            <div class="loss-indicator loss-indicator-2 not-lost"></div>
+            <div class="loss-indicator loss-indicator-1" :class="lost1Classes"></div>
+            <div class="loss-indicator loss-indicator-2" :class="lost2Classes"></div>
         </div>
+        <div class="passed-container" v-if="roundPassed"><h2>Passed</h2></div>
         <div class="total-points-container">{{ roundScore }}</div>
     </div>
 </template>
@@ -65,6 +66,29 @@
             1px 1px 0 rgba(255,255,255,0.6);
     }
 
+    .stats .passed-container {
+        position: absolute;
+        left: 80px;
+        top: -34px;
+        width: 274px;
+        height: 28px;
+        background: -moz-radial-gradient(center, ellipse cover, rgba(99,78,52,1) 0%, rgba(249,248,247,0) 76%, rgba(255,255,255,0) 79%);
+        background: -webkit-radial-gradient(center, ellipse cover, rgba(99,78,52,1) 0%,rgba(249,248,247,0) 76%,rgba(255,255,255,0) 79%);
+        background: radial-gradient(ellipse at center, rgba(99,78,52,1) 0%,rgba(249,248,247,0) 76%,rgba(255,255,255,0) 79%);
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#634e34', endColorstr='#00ffffff',GradientType=1 );
+
+        h2 {
+            font-size: 2.2rem;
+            color: #BCA07A;
+            text-align: center;
+            line-height: 28px;
+            text-shadow: -1px -1px 0 rgba(0,0,0,0.6),
+                1px -1px 0 rgba(0,0,0,0.6),
+                -1px 1px 0 rgba(0,0,0,0.6),
+                1px 1px 0 rgba(0,0,0,0.6);
+        }
+    }
+
     .player-stats {
         height: 112px;
         top: 249px;
@@ -81,33 +105,40 @@
     .player-stats .total-points-container {
         top: 30px;
     }
+
+    .player-stats .passed-container {
+        top: -13px;
+    }
 </style>
 
 <script>
     import GameService from '../services/GameService.js';
 
     export default {
-        props: ['token', 'statsFor'],
+        props: ['statsFor'],
         computed: {
             game() {
                 return this.$store.getters.game;
+            },
+            currentRound() {
+                return this.$store.getters.currentRound;
             },
             statsClass() {
                 return this.statsFor + '-stats';
             },
             roundScore() {
-                const currRound = this.game.round;
-                if (this.game && this.game.hasOwnProperty('rounds') && this.game.rounds[currRound].scores.hasOwnProperty('totals')) {
-                    const playerIndex = this.statsFor === 'player' ? 0 : 1;
-                    return this.game.rounds[currRound].scores.totals[playerIndex];
+                if (this.game) {
+                    return this.game.rounds[this.currentRound].scores.totals[this.playerIndex];
                 } else {
                     return 0;
                 }
             },
+            playerIndex() {
+                return this.statsFor === 'player' ? 0 : 1;
+            },
             cardsLeft() {
-                const playerIndex = this.statsFor === 'player' ? 0 : 1;
-                if (this.game && this.game.hasOwnProperty('players')) {
-                    const rows = this.game.players[playerIndex].cards;
+                if (this.game) {
+                    const rows = this.game.players[this.playerIndex].cards;
                     let cardCount = 0;
 
                     rows.forEach(row => {
@@ -115,9 +146,29 @@
                     });
 
                     return cardCount;
-                } else {
-                    return 0;
                 }
+
+                return 0;
+            },
+            losses() {
+                if (this.game) {
+                    return this.game.players[this.playerIndex].losses;
+                }
+
+                return false;
+            },
+            lost1Classes() {
+                return {
+                    'not-lost': this.losses ? !this.losses[0] : true
+                }
+            },
+            lost2Classes() {
+                return {
+                    'not-lost': this.losses ? !this.losses[1] : true
+                }
+            },
+            roundPassed() {
+                return this.game ? this.game.players[this.playerIndex].passed[this.currentRound] : 0;
             }
         },
         methods: {

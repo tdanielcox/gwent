@@ -14,6 +14,7 @@
 
         <div class="player-container">
             <stats :stats-for="'player'"></stats>
+            <pass-button></pass-button>
 
             <div class="board player-board">
                 <board-row :row-index="1" :row-type="'melee'" :row-for="'player'"></board-row>
@@ -66,6 +67,7 @@
     import Graveyard from './Graveyard';
     import Stats from './Stats';
     import PlayerHand from './PlayerHand';
+    import PassButton from './PassButton';
 
     export default {
         props: [],
@@ -73,7 +75,8 @@
             BoardRow,
             Stats,
             Graveyard,
-            PlayerHand
+            PlayerHand,
+            PassButton
         },
         data() {
             return {

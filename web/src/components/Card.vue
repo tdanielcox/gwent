@@ -14,9 +14,17 @@
                     <p v-if="cardAbility">{{ cardAbility }}</p>
                 </div>
 
-                <h2>Play this card?</h2>
-                <button class="yes-button" @click="playCard">Yes</button>
-                <button class="no-button">No</button>
+                <div class="actions" :class="{ 'blurred': pauseUser }">
+                    <div class="cover" v-if="pauseUser">
+                        {{ currentPlayer === 1 ? 'Waiting for computer' : 'Waiting' }}
+                    </div>
+
+                    <div class="actions-inner">
+                        <h2>Play this card?</h2>
+                        <button class="yes-button" @click="playCard">Yes</button>
+                        <button class="no-button">No</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -66,6 +74,10 @@
             }
         }
 
+        .actions.blurred {
+
+        }
+
         .actual-strength {
             position: absolute;
             top: 6px;
@@ -109,6 +121,11 @@
 
                 button {
                     font-size: 0.8rem;
+                    cursor: pointer;
+
+                    &:hover {
+                        background: #c0c0c0;
+                    }
                 }
 
                 .card-details {
@@ -124,11 +141,44 @@
                 }
             }
         }
-    }
 
-    .card.dragging {
-        width: 130px;
-        height: 200px;
+        .actions {
+            position: relative;
+
+            &.blurred .actions-inner {
+                opacity: 0;
+            }
+
+            .cover {
+                position: absolute;
+                width: 100%;
+                top: 0;
+                bottom: 0;
+                font-size: 0.6rem;
+
+                &:after {
+                    overflow: hidden;
+                    display: inline-block;
+                    vertical-align: bottom;
+                    -webkit-animation: ellipsis steps(4,end) 900ms infinite;
+                    animation: ellipsis steps(4,end) 900ms infinite;
+                    content: "\2026";
+                    width: 0;
+                }
+
+                @keyframes ellipsis {
+                    to {
+                        width: 1.25em;
+                    }
+                }
+
+                @-webkit-keyframes ellipsis {
+                    to {
+                        width: 1.25em;
+                    }
+                }
+            }
+        }
     }
 
     .card.in-play {
@@ -170,6 +220,15 @@
             },
             game() {
                 return this.$store.getters.game;
+            },
+            currentPlayer() {
+                return this.$store.getters.currentPlayer;
+            },
+            notificationVisible() {
+                return this.$store.getters.notificationVisible;
+            },
+            pauseUser() {
+                return this.currentPlayer === 1 || this.notificationVisible;
             },
             cardClasses() {
                 return {

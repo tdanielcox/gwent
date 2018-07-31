@@ -27,6 +27,7 @@ class Gwent:
                 self.__setup_player(nr_cards),
                 self.__setup_player(nr_cards),
             ],
+            'status': ['round_0_start', 'player_%i_start' % first_player]
         }
 
         return self.game
@@ -42,6 +43,8 @@ class Gwent:
             self.__computer_turn = computer_round_actions
         elif player_count == 1:
             self.__computer_turn = computer_round_actions
+
+        self.__factor_board()
 
         return self.game
 
@@ -149,10 +152,14 @@ class Gwent:
             print _.SEPARATOR
             print '\nYou played: (%i) %s' % (card[_.BASE_STRENGTH], card[_.NAME])
 
-            try:
-                self.__factor_board()
-            except:
-                print 'error'
+            self.__set_status('player_%i_play_card' % self.game['current_player'], True)
+            self.__factor_board()
+            self.game['current_player'] = self.__get_next_player()
+            self.__set_status('player_%i_next' % self.game['current_player'])
+
+            if self.game['current_player'] is None:
+                self.__factor_round_winner()
+                self.__set_round(current_round + 1)
         else:
             print '\nCANNOT FIND THIS CARD'
 
@@ -160,6 +167,39 @@ class Gwent:
 
     def pass_round(self, player_index):
         self.__run_pass(player_index)
+        self.game['current_player'] = self.__get_next_player()
+
+        self.__factor_board()
+        self.__set_status('player_%i_passed' % player_index, True)
+
+        if self.game['current_player'] is None:
+            self.__factor_round_winner()
+            self.__set_round(self.game['round'] + 1)
+        else:
+            self.__set_status('player_%i_next' % self.game['current_player'])
+
+        return self.game
+
+    def __set_status(self, status, reset=False):
+        if reset:
+            self.game['status'] = []
+
+        self.game['status'].append(status)
+
+        return self.game
+
+    def __get_next_player(self):
+        current_round = self.game['round']
+        current_player = self.game['current_player']
+        next_player = int(not current_player)
+        passed = self.__get_passed(current_round)
+
+        if passed[next_player] and passed[current_player]:
+            next_player = None
+        elif passed[next_player]:
+            next_player = current_player
+
+        return next_player
 
     def __get_card(self, cards, card_id):
         card = None
@@ -226,23 +266,35 @@ class Gwent:
 
         return [player_passed, computer_passed]
 
+    def __factor_round_winner(self):
+        current_round = self.game['round']
+        return self.__determine_last_round_winner(current_round + 1)
+
     def __determine_last_round_winner(self, current_round):
         last_round = current_round - 1
         totals = self.__calculate_round_totals(last_round)
+        winner = None
 
         if totals[_.PLAYER] > totals[_.COMPUTER]:
             self.__increment_losses(_.COMPUTER)
             self.game['rounds'][last_round]['winner'] = _.PLAYER
+            self.__set_status('round_%i_player_0_win' % last_round)
+            winner = 0
             print '\nPlayer wins!'
         elif totals[_.COMPUTER] > totals[_.PLAYER]:
             self.__increment_losses(_.PLAYER)
             self.game['rounds'][last_round]['winner'] = _.COMPUTER
+            self.__set_status('round_%i_player_1_win' % last_round)
+            winner = 1
             print '\nComputer wins!'
         else:
             self.__increment_losses(_.PLAYER)
             self.__increment_losses(_.COMPUTER)
             self.game['rounds'][last_round]['winner'] = None
+            self.__set_status('round_%i_tie' % last_round)
             print '\nTie!'
+
+        return winner
 
     def __increment_losses(self, loser):
         losses = self.game['players'][loser]['losses']
@@ -303,6 +355,15 @@ class Gwent:
             card_id = user_input
             self.play_card(card_id)
 
+    def __set_round(self, new_round):
+        if new_round > 2:
+            return False
+
+        self.game['round'] = new_round
+        self.__set_status('round_%i_start' % new_round)
+
+        return self.game
+
     def __setup_round(self):
         return {'cards': [[[], [], []], [[], [], []]], 'scores': {}, 'winner': None}
 
@@ -357,66 +418,67 @@ class Gwent:
                 pass
 
     def __factor_board(self):
-        current_round = self.game['round']
-        board = self.game['rounds'][current_round]['cards']
+        scores = []
 
-        scores = {
-            'totals': [0, 0],
-            'rows': [[0, 0, 0], [0, 0, 0]],
-            'cards': [[[], [], []], [[], [], []]]
-        }
+        for current_round in range(3):
+            board = self.game['rounds'][current_round]['cards']
+            _scores = {
+                'totals': [0, 0],
+                'rows': [[0, 0, 0], [0, 0, 0]],
+                'cards': [[[], [], []], [[], [], []]]
+            }
 
-        for x in range(2):
-            rows = board[x]
+            for x in range(2):
+                rows = board[x]
 
-            for row in rows:
-                has_weather = False
-                boost_modifier = 0
-                pre_bonded = []
+                for row in rows:
+                    has_weather = False
+                    boost_modifier = 0
+                    pre_bonded = []
 
-                for card in row:
-                    if card[_.ABILITY] == _.WEATHER:
-                        has_weather = True
+                    for card in row:
+                        if card[_.ABILITY] == _.WEATHER:
+                            has_weather = True
 
-                    if card[_.ABILITY] == _.BOND:
-                        pre_bonded.append(card[_.AFFECTS])
+                        if card[_.ABILITY] == _.BOND:
+                            pre_bonded.append(card[_.AFFECTS])
 
-                    if card[_.ABILITY] == _.BOOST:
-                        boost_modifier += 1
+                        if card[_.ABILITY] == _.BOOST:
+                            boost_modifier += 1
 
-                bonded = _.get_duplicates(pre_bonded)
+                    bonded = _.get_duplicates(pre_bonded)
 
-                for card in row:
-                    bond_modifier = 1
-                    card_boost = copy.copy(boost_modifier)
+                    for card in row:
+                        bond_modifier = 1
+                        card_boost = copy.copy(boost_modifier)
 
-                    if card[_.AFFECTS] in bonded:
-                        bond_modifier = pre_bonded.count(card[_.AFFECTS])
-                        card[_.ACTUAL_STRENGTH] = int(card[_.BASE_STRENGTH]) * bond_modifier
+                        if card[_.AFFECTS] in bonded:
+                            bond_modifier = pre_bonded.count(card[_.AFFECTS])
+                            card[_.ACTUAL_STRENGTH] = int(card[_.BASE_STRENGTH]) * bond_modifier
 
-                    if card[_.ABILITY] == _.BOOST:
-                        card_boost -= 1
+                        if card[_.ABILITY] == _.BOOST:
+                            card_boost -= 1
 
-                    if has_weather:
-                        if card[_.ABILITY] == _.HERO:
-                            pass
-                        elif card[_.BASE_STRENGTH] == 0:
-                            pass
+                        if has_weather:
+                            if card[_.ABILITY] == _.HERO:
+                                pass
+                            elif card[_.BASE_STRENGTH] == 0:
+                                pass
+                            else:
+                                card[_.ACTUAL_STRENGTH] = bond_modifier + card_boost
                         else:
-                            card[_.ACTUAL_STRENGTH] = bond_modifier + card_boost
-                    else:
-                        if bond_modifier > 1:
-                            card[_.ACTUAL_STRENGTH] += card_boost
-                        else:
-                            card[_.ACTUAL_STRENGTH] = card[_.BASE_STRENGTH] + card_boost
+                            if bond_modifier > 1:
+                                card[_.ACTUAL_STRENGTH] += card_boost
+                            else:
+                                card[_.ACTUAL_STRENGTH] = card[_.BASE_STRENGTH] + card_boost
 
-                    scores['totals'][x] += card[_.ACTUAL_STRENGTH]
-                    scores['rows'][x][card[_.ROW]] += card[_.ACTUAL_STRENGTH]
-                    scores['cards'][x][card[_.ROW]].append(card[_.ACTUAL_STRENGTH])
+                        _scores['totals'][x] += card[_.ACTUAL_STRENGTH]
+                        _scores['rows'][x][card[_.ROW]] += card[_.ACTUAL_STRENGTH]
+                        _scores['cards'][x][card[_.ROW]].append(card[_.ACTUAL_STRENGTH])
 
-        # print scores
+            self.game['rounds'][current_round]['scores'] = _scores
+            scores.append(_scores)
 
-        self.game['rounds'][current_round]['scores'] = scores
         return scores
 
     def __print_board(self, current_round):

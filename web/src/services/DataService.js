@@ -12,6 +12,10 @@ const GameService = {
         return axios.post(API_URL + '/play-card?game_id=' + gameId, { card_id: cardId });
     },
 
+    passRound(gameId) {
+        return axios.post(API_URL + '/pass-round?game_id=' + gameId, {});
+    },
+
     aiTurn(gameId) {
         return axios.get(API_URL + '/ai-turn?game_id=' + gameId);
     }
