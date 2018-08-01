@@ -364,9 +364,15 @@ class Gwent:
             return False
 
         self.game['round'] = new_round
-        self.game['current_player'] = round_winner
         self.__set_status('round_%i_start' % new_round)
-        self.__set_status('player_%i_start' % round_winner)
+
+        if round_winner is not None:
+            self.__set_status('player_%i_start' % round_winner)
+            self.game['current_player'] = round_winner
+        else:
+            rand = _.rand0_1()
+            self.__set_status('player_%i_start' % rand)
+            self.game['current_player'] = rand
 
         return self.game
 
