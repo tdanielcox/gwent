@@ -159,13 +159,15 @@ class Gwent:
 
             if self.game['current_player'] is None:
                 self.__factor_round_winner()
-                self.__set_round(current_round + 1)
+                self.__next_round(current_round, self.game['rounds'][current_round]['winner'])
         else:
             print '\nCANNOT FIND THIS CARD'
 
         return self.game
 
     def pass_round(self, player_index):
+        current_round = self.game['round']
+
         self.__run_pass(player_index)
         self.game['current_player'] = self.__get_next_player()
 
@@ -174,7 +176,7 @@ class Gwent:
 
         if self.game['current_player'] is None:
             self.__factor_round_winner()
-            self.__set_round(self.game['round'] + 1)
+            self.__next_round(self.game['round'], self.game['rounds'][current_round]['winner'])
         else:
             self.__set_status('player_%i_next' % self.game['current_player'])
 
@@ -355,12 +357,16 @@ class Gwent:
             card_id = user_input
             self.play_card(card_id)
 
-    def __set_round(self, new_round):
+    def __next_round(self, current_round, round_winner):
+        new_round = current_round + 1
+
         if new_round > 2:
             return False
 
         self.game['round'] = new_round
+        self.game['current_player'] = round_winner
         self.__set_status('round_%i_start' % new_round)
+        self.__set_status('player_%i_start' % round_winner)
 
         return self.game
 

@@ -7,12 +7,13 @@
         </div>
         <div class="passed-container" v-if="roundPassed"><h2>Passed</h2></div>
         <div class="total-points-container">{{ roundScore }}</div>
+        <div class="turn-indicator" :class="{ active: currentPlayer === statsForIndex }"></div>
     </div>
 </template>
 
 <style lang="scss">
     .stats {
-        width: 248px;
+        width: 275px;
         height: 92px;
         position: absolute;
         top: 288px;
@@ -39,10 +40,22 @@
         left: 83px;
         position: absolute;
         text-align: center;
+
+        &.not-lost {
+            background: url("../assets/img/jewel-filled.png") no-repeat center center;
+        }
     }
 
-    .stats .loss-indicator.not-lost {
-        background: url("../assets/img/jewel-filled.png") no-repeat center center;
+    .stats .turn-indicator {
+        width: 108px;
+        height: 80px;
+        top: -4px;
+        left: 164px;
+        position: absolute;
+
+        &.active {
+            background: url("../assets/img/turn-indicator.png") no-repeat center center;
+        }
     }
 
     .stats .loss-indicator-2 {
@@ -106,6 +119,10 @@
         top: 30px;
     }
 
+    .player-stats .turn-indicator {
+        top: 18px;
+    }
+
     .player-stats .passed-container {
         top: -13px;
     }
@@ -122,6 +139,12 @@
             },
             currentRound() {
                 return this.$store.getters.currentRound;
+            },
+            currentPlayer() {
+                return this.$store.getters.currentPlayer;
+            },
+            statsForIndex() {
+                return this.statsFor === 'player' ? 0 : 1;
             },
             statsClass() {
                 return this.statsFor + '-stats';
