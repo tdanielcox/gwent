@@ -7,3 +7,4 @@ old/
 .idea/
 api/data/*
 .pytest_cache/
+venv/

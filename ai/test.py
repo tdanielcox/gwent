@@ -1,9 +1,13 @@
-from game.Gwent import Gwent
-from game import lib as _
-from Ai import computer_round_actions
+from sys import path
+path.append('..')
 
-gwent = Gwent()
-gwent.new(0, computer_round_actions)
+from game.Gwent import Gwent
+# from game import lib as _
+from ai.Ai import computer_round_actions
+
+gwent = Gwent({'enable_logging': True})
+gwent.new()
+gwent.start(0, computer_round_actions)
 
 # for player_index in range(2):
 # 	gwent.trade_cycle(player_index, 2)
