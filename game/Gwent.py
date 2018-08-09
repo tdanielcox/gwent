@@ -5,6 +5,7 @@ from game.lib.cli import CLI
 from game.lib import util
 
 
+# Gwent game class
 class Gwent:
     def __init__(self, options={}):
         self.game = {}
@@ -22,6 +23,7 @@ class Gwent:
         self.logger = Logger(enable_logging)
         self.cli = CLI(self, self.logger)
 
+    # Create a new game
     def new(self):
         first_player = util.rand0_1()
 
@@ -45,11 +47,13 @@ class Gwent:
 
         return self.game
 
+    # Load an existing game
     def load(self, blob):
         self.game = blob
 
         return self.game
 
+    # Start the game
     def start(self, player_count, computer_round_actions=None, computer_trade_actions=None):
         if player_count == 0:
             self.has_player = False
