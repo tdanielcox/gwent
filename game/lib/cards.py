@@ -19,7 +19,6 @@ nr_cards = [
     ['John Natalis', 0, 10, 3, 0, 'northern-realms/john-natalis.png'],
     ['Vernon Roche', 0, 10, 3, 0, 'northern-realms/vernon-roche.png'],
 
-
     ['Sabrina Glevissig', 1, 4, 0, 0, 'northern-realms/sabrina-glevissig.png'],
     ['Sheldon Skaggs', 1, 4, 0, 0, 'northern-realms/sheldon-skaggs.png'],
     ['Sile de Tansarville', 1, 5, 0, 0, 'northern-realms/sile-de-tansarville.png'],
@@ -34,7 +33,7 @@ nr_cards = [
     ['Kaedweni Siege Expert', 2, 1, 4, 0, 'northern-realms/kaedweni-siege-expert.png'],
     ['Kaedweni Siege Expert', 2, 1, 4, 0, 'northern-realms/kaedweni-siege-expert.png'],
     ['Thaler', 2, 1, 2, 0, 'northern-realms/thaler.png'],
-    # ['Dun Banner Medic', 2, 5, 5, 0, 'northern-realms/dun-banner-medic.png'],
+    ['Dun Banner Medic', 2, 5, 5, 0, 'northern-realms/dun-banner-medic.png'],
     ['Siege Tower', 2, 6, 0, 0, 'northern-realms/siege-tower.png'],
     ['Trebuchet', 2, 6, 0, 0, 'northern-realms/trebuchet.png'],
     ['Trebuchet', 2, 6, 0, 0, 'northern-realms/trebuchet.png'],

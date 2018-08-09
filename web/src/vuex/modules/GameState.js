@@ -8,6 +8,9 @@ const state = {
     notificationVisible: false,
     currentRound: 0,
     currentPlayer: 0,
+    cardSelectorVisible: false,
+    cardSelectorType: null,
+    cardSelectorCards: [],
 };
 
 const getters = {
@@ -37,7 +40,17 @@ const getters = {
     },
     currentPlayer: state => {
         return state.currentPlayer;
-    }
+    },
+    cardSelectorVisible: state => {
+        return state.cardSelectorVisible;
+    },
+    cardSelectorType: state => {
+        return state.cardSelectorType;
+    },
+    cardSelectorCards: state => {
+        return state.cardSelectorCards;
+    },
+
 };
 
 const mutations = {
@@ -67,6 +80,15 @@ const mutations = {
     },
     SET_CURRENT_PLAYER(state, currentPlayer) {
         state.currentPlayer = currentPlayer;
+    },
+    SET_CARD_SELECTOR_VISIBLE(state, cardSelectorVisible) {
+        state.cardSelectorVisible = cardSelectorVisible;
+    },
+    SET_CARD_SELECTOR_TYPE(state, cardSelectorType) {
+        state.cardSelectorType = cardSelectorType;
+    },
+    SET_CARD_SELECTOR_CARDS(state, cardSelectorCards) {
+        state.cardSelectorCards = cardSelectorCards;
     }
 };
 
@@ -97,6 +119,15 @@ const actions = {
     },
     setCurrentPlayer(context, currentPlayer) {
         context.commit('SET_CURRENT_PLAYER', currentPlayer);
+    },
+    setCardSelectorVisible(context, cardSelectorVisible) {
+        context.commit('SET_CARD_SELECTOR_VISIBLE', cardSelectorVisible);
+    },
+    setCardSelectorType(context, cardSelectorType) {
+        context.commit('SET_CARD_SELECTOR_TYPE', cardSelectorType);
+    },
+    setCardSelectorCards(context, cardSelectorCards) {
+        context.commit('SET_CARD_SELECTOR_CARDS', cardSelectorCards);
     }
 };
 

@@ -2,6 +2,7 @@
     <div class="game">
         <board></board>
         <notification></notification>
+        <card-selector></card-selector>
         <copyright></copyright>
     </div>
 </template>
@@ -18,6 +19,7 @@
     import GameService from '../services/GameService.js';
     import Board from './Board';
     import Notification from './Notification';
+    import CardSelector from './CardSelector';
     import Copyright from './Copyright';
 
     export default {
@@ -25,6 +27,7 @@
         components: {
             Board,
             Notification,
+            CardSelector,
             Copyright
         },
         data() {
@@ -42,8 +45,6 @@
         },
         mounted() {
             GameService.startGame();
-
-            // console.log(this.game);
         }
     }
 </script>

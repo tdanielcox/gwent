@@ -72,6 +72,41 @@
                 transform: scale(1);
                 z-index: 1;
             }
+
+            .confirm-box {
+                display: none;
+            }
+        }
+
+        &.inGraveyard {
+            transform: scale(1);
+            cursor: default;
+            width: 110px;
+            height: 144px;
+            top: 0;
+            left: 0;
+            position: absolute;
+            opacity: 0.4;
+
+            &:hover {
+                opacity: 0.4;
+                transform: scale(1);
+                z-index: 1;
+            }
+
+            .actual-strength,
+            .confirm-box {
+                display: none;
+            }
+        }
+
+        &.inSelector {
+            width: 110px;
+            height: 172px;
+
+            .actual-strength {
+                display: none;
+            }
         }
 
         .actions.blurred {
@@ -106,17 +141,20 @@
             height: 100%;
             width: 100%;
             position: relative;
+            color: #000;
 
             .inner {
                 position: relative;
                 top: 50%;
                 transform: translateY(-50%);
                 padding: 1px 0.5rem;
+                color: #000;
 
                 h2 {
                     font-size: 0.6rem;
                     margin-top: 1rem;
                     margin-bottom: 1rem;
+                    color: #000;
                 }
 
                 button {
@@ -130,6 +168,7 @@
 
                 .card-details {
                     margin-top: 0.4rem;
+                    color: #000;
 
                     h3 {
                         font-size: 0.8rem;
@@ -180,13 +219,6 @@
             }
         }
     }
-
-    .card.in-play {
-        width: 80px;
-        height: 120px;
-        display: inline-block;
-        margin: 0 2px;
-    }
 </style>
 
 <script>
@@ -209,7 +241,7 @@
     const SCORCH = 7;
 
     export default {
-        props: ['card', 'inPlay'],
+        props: ['card', 'inPlay', 'inGraveyard', 'inSelector'],
         data() {
             return {
             }
@@ -235,9 +267,11 @@
                     selected: this.currentFocusedCard === this.card[ID],
                     inBackground: this.currentFocusedCard && this.currentFocusedCard !== this.card[ID],
                     inPlay: this.inPlay,
+                    inGraveyard: this.inGraveyard,
+                    inSelector: this.inSelector,
                     noStrength: this.card[ABILITY] === WEATHER
-                                || this.card[ABILITY] === HERO
-                                || this.card[ABILITY] === SCORCH,
+                             || this.card[ABILITY] === HERO
+                             || this.card[ABILITY] === SCORCH,
                 };
             },
             css() {
@@ -290,16 +324,22 @@
                 return images('./' + this.card[IMAGE_PATH])
             },
             focusCard() {
-                if (this.inPlay || this.currentFocusedCard === this.card[ID]) {
+                if (this.inPlay || this.inGraveyard || this.currentFocusedCard === this.card[ID]) {
                     this.$store.dispatch('setFocusedCardId', null);
                 } else {
                     this.$store.dispatch('setFocusedCardId', this.card[ID]);
                 }
             },
             playCard() {
-                GameService.playCard(this.card[ID]).then(response => {
+                if (this.inSelector) {
+                    GameService.reviveCard(this.card[ID]).catch(() => {
 
-                });
+                    });
+
+                    this.$store.dispatch('setCardSelectorVisible', false);
+                } else {
+                    GameService.playCard(this.card[ID]);
+                }
             }
         },
         created() {

@@ -1,30 +1,32 @@
-import lib as _
-import random
 import copy
-from cards import nr_cards
-from logger import Logger
+from game.lib.cards import nr_cards
+from game.lib.logger import Logger
+from game.lib.cli import CLI
+from game.lib import util
 
 
 class Gwent:
     def __init__(self, options={}):
         self.game = {}
-        self.__has_player = True
-        self.__computer_turn = None
-        self.__cli_output = True
-        self.__enable_logging = True \
+        self.has_player = True
+        self.computer_turn = None
+        self.computer_trade_round = None
+        self.__enable_logging = True
+        self.__last_prompt = None
 
-        if 'enable_logging' in options and options['enable_logging'] is True:
-            enable_logging = True
+        if 'enable_logging' in options and options['enable_logging'] is not False:
+            enable_logging = options['enable_logging']
         else:
             enable_logging = False
 
         self.logger = Logger(enable_logging)
+        self.cli = CLI(self, self.logger)
 
     def new(self):
-        first_player = _.rand0_1()
+        first_player = util.rand0_1()
 
         self.game = {
-            'id': _.generate_uuid(),
+            'id': util.generate_uuid(),
             'round': 0,
             'loser': None,
             'current_player': first_player,
@@ -37,7 +39,8 @@ class Gwent:
                 self.__setup_player(nr_cards),
                 self.__setup_player(nr_cards),
             ],
-            'status': ['round_0_start', 'player_%i_start' % first_player]
+            'status': ['round_0_start', 'player_%i_start' % first_player],
+            'prompt': None
         }
 
         return self.game
@@ -47,73 +50,32 @@ class Gwent:
 
         return self.game
 
-    def start(self, player_count, computer_round_actions):
+    def start(self, player_count, computer_round_actions=None, computer_trade_actions=None):
         if player_count == 0:
-            self.__has_player = False
-            self.__computer_turn = computer_round_actions
+            self.has_player = False
+            self.computer_turn = computer_round_actions
+            self.computer_trade_round = computer_trade_actions
         elif player_count == 1:
-            self.__computer_turn = computer_round_actions
+            self.computer_turn = computer_round_actions
+            self.computer_trade_round = computer_trade_actions
 
-        self.__factor_board()
-
-        return self.game
-
-    def trade_cycle(self, player_index, num_cards):
-        player = self.game['players'][player_index]
-
-        print 'Trading Round'
-
-        title = '\n%s\'s turn' % _.parse_player(player_index)
-        self.logger.print_hand(self, title, player['cards'])
-
-        for i in range(num_cards):
-            suffix = 'st' if i == 0 else 'nd'
-            print '\n%i%s trade' % (i + 1, suffix)
-
-            card_id = raw_input('\nWhat card would you like to trade? ')
-            self.__swap_card(player, card_id)
-            self.logger.print_hand(self, '\n\nYour cards are now: ', player['cards'])
-
-    def start_round(self, current_round):
-        if current_round > 0:
-            self.__determine_last_round_winner(current_round)
-
-        if self.game['loser'] is not None:
-            self.logger.print_winner(self, not self.game['loser'])
-        else:
-            self.game['round'] = current_round
-
-            for x in range(60):
-                passed = self.get_passed(current_round)
-                if passed[0] and passed[1]:
-                    break
-
-                self.start_iteration(current_round, x)
-
-        if current_round == 2:
-            self.__finish_game()
-
-    def start_iteration(self, current_round, current_iteration):
-        board_scores = self.__factor_board()
-        player_index = self.game['current_player']
-
-        self.logger.print_round_info(self, current_iteration)
-
-        if player_index == _.COMPUTER and self.__computer_turn is not False:
-            self.__computer_turn(self.game, current_round, self.game['players'][_.COMPUTER]['cards'])
-        elif player_index == _.PLAYER and self.__has_player is False:
-            self.__computer_turn(self.game, current_round, self.game['players'][_.PLAYER]['cards'])
-        else:
-            self.__start_player_turn()
-
-        if current_iteration == 5:
-            exit()
+        self.factor_board()
 
         return self.game
+
+    def start_cli(self, player_count, computer_round_actions=None, computer_trade_actions=None):
+        self.start(player_count, computer_round_actions, computer_trade_actions)
+
+        for current_round in range(3):
+            self.cli.start_round(current_round)
+            self.__set_graveyards(current_round)
+
+            if current_round == 2:
+                self.finish_game()
 
     def ai_turn(self):
         current_round = self.game['round']
-        self.__computer_turn(self.game, current_round, self.game['players'][_.COMPUTER]['cards'])
+        self.computer_turn(self, current_round, self.game['players'][util.COMPUTER]['cards'])
 
         return self.game
 
@@ -123,36 +85,49 @@ class Gwent:
         player = self.game['players'][player_index]
 
         _card = self.__get_card(player['cards'], card_id)
+        self.__reset_prompt()
 
         if _card is not None:
             card = _card[0]
             row = _card[1]
             index = _card[2]
+            can_run_medic = False
 
             del player['cards'][row][index]
 
-            if card[_.ROW] == 3:
-                if card[_.ABILITY] == _.WEATHER:
+            if card[util.ROW] == 3:
+                if card[util.ABILITY] == util.WEATHER:
                     self.__run_clear_weather()
-                if card[_.ABILITY] == _.SCORCH:
+                if card[util.ABILITY] == util.SCORCH:
                     self.__run_scorch()
             else:
-                if card[_.ABILITY] == _.SPY:
+                if card[util.ABILITY] == util.SPY:
                     self.__run_spy(player_index)
                     opponent_index = not player_index
                     self.game['rounds'][current_round]['cards'][opponent_index][row].append(card)
-                elif card[_.ABILITY] == _.WEATHER:
+                elif card[util.ABILITY] == util.WEATHER:
                     opponent_index = not player_index
                     self.game['rounds'][current_round]['cards'][player_index][row].append(card)
                     self.game['rounds'][current_round]['cards'][opponent_index][row].append(card)
+                elif card[util.ABILITY] == util.MEDIC:
+                    self.game['rounds'][current_round]['cards'][player_index][row].append(card)
+                    can_run_medic = self.__run_medic()
                 else:
                     self.game['rounds'][current_round]['cards'][player_index][row].append(card)
 
             self.logger.print_card_played(self, player_index, card)
 
             self.__set_status('player_%i_play_card' % self.game['current_player'], True)
-            self.__factor_board()
-            self.game['current_player'] = self.__get_next_player()
+            self.factor_board()
+
+            if card[util.ABILITY] == util.MEDIC:
+                if not can_run_medic:
+                    self.game['current_player'] = self.__get_next_player()
+            elif card[util.ABILITY] == util.DECOY:
+                pass
+            else:
+                self.game['current_player'] = self.__get_next_player()
+
             self.__set_status('player_%i_next' % self.game['current_player'])
 
             if self.game['current_player'] is None:
@@ -163,13 +138,48 @@ class Gwent:
 
         return self.game
 
-    def pass_round(self, player_index):
-        current_round = self.game['round']
+    def revive_card(self, card_id):
+        player_index = self.game['current_player']
+        player = self.game['players'][player_index]
+        card = None
 
-        self.__run_pass(player_index)
+        i = 0
+        index = None
+        for _card in player['graveyard']:
+            if _card[util.ID] == card_id:
+                card = _card
+                index = i
+            i += 1
+
+        if not card:
+            print '\n CANNOT FIND THIS CARD IN GRAVEYARD'
+            return
+
+        del player['graveyard'][index]
+
+        player['cards'][card[util.ROW]].append(card)
+
+        return self.play_card(card[util.ID])
+
+    def trade_cycle(self, player_index, num_cards):
+        if player_index == util.COMPUTER and self.computer_turn is not False:
+            self.computer_trade_round(self, num_cards, self.game['players'][util.COMPUTER]['cards'])
+        elif player_index == util.PLAYER and self.has_player is False:
+            self.computer_trade_round(self, num_cards, self.game['players'][util.PLAYER]['cards'])
+        else:
+            self.cli.prompt_trade_cycle(num_cards)
+
+    def pass_round(self):
+        current_round = self.game['round']
+        player_index = self.game['current_player']
+
+        self.__reset_prompt()
+        self.logger.print_pass(self, player_index)
+
+        self.game['players'][player_index]['passed'][current_round] = True
         self.game['current_player'] = self.__get_next_player()
 
-        self.__factor_board()
+        self.factor_board()
         self.__set_status('player_%i_passed' % player_index, True)
 
         if self.game['current_player'] is None:
@@ -180,11 +190,189 @@ class Gwent:
 
         return self.game
 
+    def get_cards_left(self):
+        response = []
+
+        for player_index in range(2):
+            player = self.game['players'][player_index]
+            cards = 0
+
+            for row in player['cards']:
+                cards += row.__len__()
+
+            response.append(cards)
+
+        return response
+
+    def get_passed(self, current_round):
+        player_passed = self.game['players'][util.PLAYER]['passed'][current_round]
+        computer_passed = self.game['players'][util.COMPUTER]['passed'][current_round]
+
+        return player_passed, computer_passed
+
+    def calculate_round_totals(self, current_round):
+        player_score = 0
+        computer_score = 0
+
+        player_index = 0
+
+        for board in self.game['rounds'][current_round]['cards']:
+            for row in board:
+                for card in row:
+                    if player_index == 0:
+                        player_score += card[util.ACTUAL_STRENGTH]
+                    else:
+                        computer_score += card[util.ACTUAL_STRENGTH]
+
+            player_index += 1
+
+        return [player_score, computer_score]
+
+    def swap_card(self, player, card_id):
+        _card = self.__get_card(player['cards'], card_id)
+
+        if _card is not None:
+            old_card = _card[0]
+            row = _card[1]
+            index = _card[2]
+
+            order = util.randomize_array(player['unused_cards'])
+
+            new_card = player['unused_cards'][order[0]]
+            del player['unused_cards'][order[0]]
+            player['unused_cards'].append(old_card)
+
+            new_row = new_card[util.ROW]
+
+            del player['cards'][row][index]
+            player['cards'][new_row].append(new_card)
+            player['cards'][new_row].sort()
+
+    def factor_board(self):
+        scores = []
+
+        for current_round in range(3):
+            board = self.game['rounds'][current_round]['cards']
+            _scores = {
+                'totals': [0, 0],
+                'rows': [[0, 0, 0], [0, 0, 0]],
+                'cards': [[[], [], []], [[], [], []]]
+            }
+
+            for x in range(2):
+                rows = board[x]
+
+                for row in rows:
+                    has_weather = False
+                    boost_modifier = 0
+                    pre_bonded = []
+
+                    for card in row:
+                        if card[util.ABILITY] == util.WEATHER:
+                            has_weather = True
+
+                        if card[util.ABILITY] == util.BOND:
+                            pre_bonded.append(card[util.AFFECTS])
+
+                        if card[util.ABILITY] == util.BOOST:
+                            boost_modifier += 1
+
+                    bonded = util.get_duplicates(pre_bonded)
+
+                    for card in row:
+                        bond_modifier = 1
+                        card_boost = copy.copy(boost_modifier)
+
+                        if card[util.AFFECTS] in bonded:
+                            bond_modifier = pre_bonded.count(card[util.AFFECTS])
+                            card[util.ACTUAL_STRENGTH] = int(card[util.BASE_STRENGTH]) * bond_modifier
+
+                        if card[util.ABILITY] == util.BOOST:
+                            card_boost -= 1
+
+                        if has_weather:
+                            if card[util.ABILITY] == util.HERO:
+                                pass
+                            elif card[util.BASE_STRENGTH] == 0:
+                                pass
+                            else:
+                                card[util.ACTUAL_STRENGTH] = bond_modifier + card_boost
+                        else:
+                            if bond_modifier > 1:
+                                card[util.ACTUAL_STRENGTH] += card_boost
+                            else:
+                                card[util.ACTUAL_STRENGTH] = card[util.BASE_STRENGTH] + card_boost
+
+                        _scores['totals'][x] += card[util.ACTUAL_STRENGTH]
+                        _scores['rows'][x][card[util.ROW]] += card[util.ACTUAL_STRENGTH]
+                        _scores['cards'][x][card[util.ROW]].append(card[util.ACTUAL_STRENGTH])
+
+            self.game['rounds'][current_round]['scores'] = _scores
+            scores.append(_scores)
+
+        return scores
+
+    def determine_last_round_winner(self, current_round):
+        last_round = current_round - 1
+        totals = self.calculate_round_totals(last_round)
+        winner = None
+
+        if totals[util.PLAYER] > totals[util.COMPUTER]:
+            self.__increment_losses(util.COMPUTER)
+            self.game['rounds'][last_round]['winner'] = util.PLAYER
+            self.__set_status('round_%i_player_0_win' % last_round)
+            winner = 0
+        elif totals[util.COMPUTER] > totals[util.PLAYER]:
+            self.__increment_losses(util.PLAYER)
+            self.game['rounds'][last_round]['winner'] = util.COMPUTER
+            self.__set_status('round_%i_player_1_win' % last_round)
+            winner = 1
+        else:
+            self.__increment_losses(util.PLAYER)
+            self.__increment_losses(util.COMPUTER)
+            self.game['rounds'][last_round]['winner'] = None
+            self.__set_status('round_%i_tie' % last_round)
+
+        self.logger.print_winner(self, winner)
+
+        if current_round == 2:
+            self.logger.print_game_winner(self, not self.game['loser'])
+
+        return winner
+
+    def finish_game(self):
+        pass
+
+    def __set_graveyards(self, current_round):
+        board = self.game['rounds'][current_round]['cards']
+
+        for player_index in range(2):
+            rows = board[player_index]
+
+            for row in rows:
+                for card in row:
+                    if not card[util.ABILITY] == util.HERO \
+                            and not card[util.ABILITY] == util.WEATHER \
+                            and not card[util.ABILITY] == util.SCORCH:
+
+                        self.game['players'][player_index]['graveyard'].append(card)
+
     def __set_status(self, status, reset=False):
         if reset:
             self.game['status'] = []
 
         self.game['status'].append(status)
+
+        return self.game
+
+    def __set_prompt(self, prompt):
+        self.game['prompt'] = prompt
+
+        return self.game
+
+    def __reset_prompt(self):
+        self.__last_prompt = self.game['prompt']
+        self.game['prompt'] = None
 
         return self.game
 
@@ -211,7 +399,7 @@ class Gwent:
             y = 0
 
             for _card in row:
-                if _card[_.ID] == card_id:
+                if _card[util.ID] == card_id:
                     card = copy.copy(_card)
                     card_index = y
                     card_row = x
@@ -221,57 +409,9 @@ class Gwent:
 
         return [card, card_row, card_index] if card is not None else None
 
-    def __finish_game(self):
-        pass
-
-    def get_cards_left(self):
-        response = []
-
-        for player_index in range(2):
-            player = self.game['players'][player_index]
-            cards = 0
-
-            for row in player['cards']:
-                cards += row.__len__()
-
-            response.append(cards)
-
-        return response
-
-    def get_passed(self, current_round):
-        player_passed = self.game['players'][_.PLAYER]['passed'][current_round]
-        computer_passed = self.game['players'][_.COMPUTER]['passed'][current_round]
-
-        return [player_passed, computer_passed]
-
     def __factor_round_winner(self):
         current_round = self.game['round']
-        return self.__determine_last_round_winner(current_round + 1)
-
-    def __determine_last_round_winner(self, current_round):
-        last_round = current_round - 1
-        totals = self.calculate_round_totals(last_round)
-        winner = None
-
-        if totals[_.PLAYER] > totals[_.COMPUTER]:
-            self.__increment_losses(_.COMPUTER)
-            self.game['rounds'][last_round]['winner'] = _.PLAYER
-            self.__set_status('round_%i_player_0_win' % last_round)
-            winner = 0
-        elif totals[_.COMPUTER] > totals[_.PLAYER]:
-            self.__increment_losses(_.PLAYER)
-            self.game['rounds'][last_round]['winner'] = _.COMPUTER
-            self.__set_status('round_%i_player_1_win' % last_round)
-            winner = 1
-        else:
-            self.__increment_losses(_.PLAYER)
-            self.__increment_losses(_.COMPUTER)
-            self.game['rounds'][last_round]['winner'] = None
-            self.__set_status('round_%i_tie' % last_round)
-
-        self.logger.print_winner(self, 0)
-
-        return winner
+        return self.determine_last_round_winner(current_round + 1)
 
     def __increment_losses(self, loser):
         losses = self.game['players'][loser]['losses']
@@ -282,56 +422,6 @@ class Gwent:
             losses[1] = True
             self.game['loser'] = loser
 
-    def calculate_round_totals(self, current_round):
-        player_score = 0
-        computer_score = 0
-
-        player_index = 0
-
-        for board in self.game['rounds'][current_round]['cards']:
-            for row in board:
-                for card in row:
-                    if player_index == 0:
-                        player_score += card[_.ACTUAL_STRENGTH]
-                    else:
-                        computer_score += card[_.ACTUAL_STRENGTH]
-
-            player_index += 1
-
-        return [player_score, computer_score]
-
-    def __start_player_turn(self):
-        player_index = self.game['current_player']
-        player = self.game['players'][player_index]
-        current_round = self.game['round']
-
-        if not player['passed'][current_round]:
-            print _.SEPARATOR
-            # self.logger.print_board(self, current_round)
-            self.__str_board(current_round)
-            self.__prompt_player_move()
-        else:
-            print _.SEPARATOR
-            print '\n%s passed.' % _.parse_player(player_index)
-
-    def __prompt_player_move(self):
-        player_index = self.game['current_player']
-        player = self.game['players'][player_index]
-
-        print _.SEPARATOR
-
-        title = '\n%s\'s Cards' % _.parse_player(player_index)
-        self.logger.print_hand(self, title, player['cards'])
-
-        print '\nType P to pass this round'
-        user_input = raw_input('What card do you want to play? ')
-
-        if user_input == 'P':
-            self.__run_pass(player_index)
-        else:
-            card_id = user_input
-            self.play_card(card_id)
-
     def __next_round(self, current_round, round_winner):
         new_round = current_round + 1
 
@@ -340,12 +430,13 @@ class Gwent:
 
         self.game['round'] = new_round
         self.__set_status('round_%i_start' % new_round)
+        self.__set_graveyards(current_round)
 
         if round_winner is not None:
             self.__set_status('player_%i_start' % round_winner)
             self.game['current_player'] = round_winner
         else:
-            rand = _.rand0_1()
+            rand = util.rand0_1()
             self.__set_status('player_%i_start' % rand)
             self.game['current_player'] = rand
 
@@ -356,17 +447,17 @@ class Gwent:
 
     def __setup_player(self, all_cards):
         cards = self.__setup_cards(all_cards)
-        return {'cards': cards[0], 'unused_cards': cards[1], 'points': 0, 'passed': [False, False, False],
-                'losses': [False, False], 'lost': False}
+        return {'cards': cards[0], 'unused_cards': cards[1], 'graveyard': [], 'points': 0,
+                'passed': [False, False, False], 'losses': [False, False], 'lost': False}
 
     def __setup_cards(self, _cards):
         cards = copy.deepcopy(_cards)
 
         for card in cards:
-            card.append(_.generate_uuid())
-            card.append(card[_.BASE_STRENGTH])
+            card.append(util.generate_uuid())
+            card.append(card[util.BASE_STRENGTH])
 
-        order = _.randomize_array(cards)
+        order = util.randomize_array(cards)
         ordered = order[:10]
 
         filled = []
@@ -379,73 +470,9 @@ class Gwent:
         for i in sorted(ordered, reverse=True):
             del cards[i]
 
-        filled = _.sort_cards(filled)
+        filled = util.sort_cards(filled)
 
         return [filled, cards]
-
-    def __factor_board(self):
-        scores = []
-
-        for current_round in range(3):
-            board = self.game['rounds'][current_round]['cards']
-            _scores = {
-                'totals': [0, 0],
-                'rows': [[0, 0, 0], [0, 0, 0]],
-                'cards': [[[], [], []], [[], [], []]]
-            }
-
-            for x in range(2):
-                rows = board[x]
-
-                for row in rows:
-                    has_weather = False
-                    boost_modifier = 0
-                    pre_bonded = []
-
-                    for card in row:
-                        if card[_.ABILITY] == _.WEATHER:
-                            has_weather = True
-
-                        if card[_.ABILITY] == _.BOND:
-                            pre_bonded.append(card[_.AFFECTS])
-
-                        if card[_.ABILITY] == _.BOOST:
-                            boost_modifier += 1
-
-                    bonded = _.get_duplicates(pre_bonded)
-
-                    for card in row:
-                        bond_modifier = 1
-                        card_boost = copy.copy(boost_modifier)
-
-                        if card[_.AFFECTS] in bonded:
-                            bond_modifier = pre_bonded.count(card[_.AFFECTS])
-                            card[_.ACTUAL_STRENGTH] = int(card[_.BASE_STRENGTH]) * bond_modifier
-
-                        if card[_.ABILITY] == _.BOOST:
-                            card_boost -= 1
-
-                        if has_weather:
-                            if card[_.ABILITY] == _.HERO:
-                                pass
-                            elif card[_.BASE_STRENGTH] == 0:
-                                pass
-                            else:
-                                card[_.ACTUAL_STRENGTH] = bond_modifier + card_boost
-                        else:
-                            if bond_modifier > 1:
-                                card[_.ACTUAL_STRENGTH] += card_boost
-                            else:
-                                card[_.ACTUAL_STRENGTH] = card[_.BASE_STRENGTH] + card_boost
-
-                        _scores['totals'][x] += card[_.ACTUAL_STRENGTH]
-                        _scores['rows'][x][card[_.ROW]] += card[_.ACTUAL_STRENGTH]
-                        _scores['cards'][x][card[_.ROW]].append(card[_.ACTUAL_STRENGTH])
-
-            self.game['rounds'][current_round]['scores'] = _scores
-            scores.append(_scores)
-
-        return scores
 
     def __str_board(self, current_round):
         board = self.game['rounds'][current_round]['cards']
@@ -461,9 +488,9 @@ class Gwent:
                 card_outputs = []
 
                 for card in row:
-                    card_output = '%02d:%d' % (card[_.ACTUAL_STRENGTH], card[_.ABILITY])
+                    card_output = '%02d:%d' % (card[util.ACTUAL_STRENGTH], card[util.ABILITY])
                     card_outputs.append(card_output)
-                    row_points += card[_.ACTUAL_STRENGTH]
+                    row_points += card[util.ACTUAL_STRENGTH]
 
                 row_output.append('[%03d]%s' % (row_points, ','.join(card_outputs)))
                 total_points += row_points
@@ -472,36 +499,16 @@ class Gwent:
 
         print '/'.join(output)
 
-    def __swap_card(self, player, card_id):
-        _card = self.__get_card(player['cards'], card_id)
-
-        if _card is not None:
-            old_card = _card[0]
-            row = _card[1]
-            index = _card[2]
-
-            order = _.randomize_array(player['unused_cards'])
-
-            new_card = player['unused_cards'][order[0]]
-            del player['unused_cards'][order[0]]
-            player['unused_cards'].append(old_card)
-
-            new_row = new_card[_.ROW]
-
-            del player['cards'][row][index]
-            player['cards'][new_row].append(new_card)
-            player['cards'][new_row].sort()
-
     def __run_spy(self, player_index):
         player = self.game['players'][player_index]
-        order = _.randomize_array(player['unused_cards'])
+        order = util.randomize_array(player['unused_cards'])
         ordered = order[:2]
 
         self.logger.print_drew_cards(self, 2)
 
         for card_index in sorted(ordered, reverse=True):
             new_card = player['unused_cards'][card_index]
-            new_row = new_card[_.ROW]
+            new_row = new_card[util.ROW]
 
             self.logger.print_card_name(self, new_card)
 
@@ -520,16 +527,16 @@ class Gwent:
 
             for row in rows:
                 for card in row:
-                    if card[_.ABILITY] is not _.HERO and card[_.ACTUAL_STRENGTH] > top_points:
-                        top_points = card[_.ACTUAL_STRENGTH]
+                    if card[util.ABILITY] is not util.HERO and card[util.ACTUAL_STRENGTH] > top_points:
+                        top_points = card[util.ACTUAL_STRENGTH]
 
         for player_index in range(2):
             rows = board[player_index]
 
             for row in rows:
                 for card in row:
-                    if card[_.ABILITY] is not _.HERO and card[_.ACTUAL_STRENGTH] == top_points:
-                        scorch_cards.append(card[_.ID])
+                    if card[util.ABILITY] is not util.HERO and card[util.ACTUAL_STRENGTH] == top_points:
+                        scorch_cards.append(card[util.ID])
 
         for player_index in range(2):
             for card_id in scorch_cards:
@@ -540,13 +547,7 @@ class Gwent:
                     index = card[2]
 
                     del board[player_index][row][index]
-                    #todo: add to graveyard
-
-    def __run_pass(self, player_index):
-        current_round = self.game['round']
-        self.game['players'][player_index]['passed'][current_round] = True
-
-        self.logger.print_pass(Gwent, player_index)
+                    self.game['players'][player_index]['graveyard'].append(card[0])
 
     def __run_clear_weather(self):
         current_round = self.game['round']
@@ -559,7 +560,17 @@ class Gwent:
             for row in cards:
                 y = 0
                 for card in row:
-                    if card[_.ABILITY] == _.WEATHER:
+                    if card[util.ABILITY] == util.WEATHER:
                         del cards[x][y]
                     y += 1
                 x += 1
+
+    def __run_medic(self):
+        player_index = self.game['current_player']
+
+        if self.game['players'][player_index]['graveyard'].__len__() > 0:
+            self.__set_prompt('player_%i_medic_revival' % player_index)
+            return True
+
+        return False
+

@@ -2,6 +2,7 @@
 import store from '../vuex/store';
 import DataService from './DataService';
 import NotificationService from './NotificationService';
+import CardSelectorService from './CardSelectorService';
 
 // const CookieKey = 'publistry_cart';
 // const CookieDomain = process.env.MIX_COOKIE_DOMAIN;
@@ -96,6 +97,29 @@ const showGameNotifications = (game) => {
 
 };
 
+const handlePrompts = (game) => {
+    return new Promise((resolve, reject) => {
+        if (game.prompt) {
+            switch (game.prompt) {
+                case 'player_0_medic_revival':
+                    CardSelectorService.open('medic', game.players[0].graveyard);
+                    reject();
+                    break;
+
+                case 'player_1_medic_revival':
+                    //  handle ai graveyard selector
+                    resolve();
+                    break;
+
+                default:
+                    resolve();
+            }
+        } else {
+            resolve();
+        }
+    });
+};
+
 const GameService = {
     startGame() {
         return DataService.startGame().then(response => {
@@ -129,8 +153,37 @@ const GameService = {
 
             console.log(game);
 
-            return showGameNotifications(game).then(() => {
-                GameService.aiTurn();
+            return handlePrompts(game).then(() => {
+                return showGameNotifications(game).then(() => {
+                    if (game.current_player === 1) {
+                        GameService.aiTurn();
+                    }
+                });
+            }).catch(() => {
+                // prompt caught
+            });
+        }).catch(err => {
+            console.log(err);
+        });
+    },
+
+    reviveCard(cardId) {
+        const gameId = store.getters.gameId;
+
+        return DataService.reviveCard(gameId, cardId).then(response => {
+            const game = response.data;
+            updateGame(game);
+
+            console.log(game);
+
+            return handlePrompts(game).then(() => {
+                return showGameNotifications(game).then(() => {
+                    if (game.current_player === 1) {
+                        GameService.aiTurn();
+                    }
+                });
+            }).catch(() => {
+                // prompt caught
             });
         }).catch(err => {
             console.log(err);
@@ -148,14 +201,16 @@ const GameService = {
                 console.log(game);
 
                 showGameNotifications(game).then(() => {
-                    GameService.aiTurn().then(_response => {
-                        const game = _response.data;
-                        updateGame(game);
+                    if (game.current_player === 1) {
+                        GameService.aiTurn().then(_response => {
+                            const game = _response.data;
+                            updateGame(game);
 
-                        console.log(game);
+                            console.log(game);
 
-                        resolve(_response);
-                    });
+                            resolve(_response);
+                        });
+                    }
                 });
             }).catch(err => {
                 reject(err);

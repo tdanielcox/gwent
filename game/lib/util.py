@@ -23,6 +23,7 @@ BOOST = 4
 MEDIC = 5
 WEATHER = 6
 SCORCH = 7
+DECOY = 8
 
 # card array
 NAME = 0

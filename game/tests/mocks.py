@@ -60,7 +60,8 @@ def full_game():
                     ["Torrential Rain", 2, 0, 6, 0, "neutral/torrential-rain.png", "c8101a73-2e9b-42b1-8104-64f882e5de84", 0],
                     ["Scorch", 3, 0, 7, 0, "neutral/scorch.png", "adb65832-dd82-4b94-b3e3-7c55781e375e", 0],
                     ["Scorch", 3, 0, 7, 0, "neutral/scorch.png", "b52f8594-9d99-49b5-bf36-7c9328c6d7fe", 0]
-                ]
+                ],
+                "graveyard": []
             },
             {
                 "lost": False,
@@ -113,7 +114,8 @@ def full_game():
                     ["Impenetrable Fog", 1, 0, 6, 0, "neutral/impenetrable-fog.png", "194fb7e7-f551-48e6-9876-624e8de249b6", 0],
                     ["Clear Weather", 3, 0, 6, 0, "neutral/clear-weather.png", "a99bb4f5-ae53-4b6e-9427-b3a2ceca8b6b", 0],
                     ["Scorch", 3, 0, 7, 0, "neutral/scorch.png", "de66b86d-ccb2-49e1-accd-013b28de9211", 0]
-                ]
+                ],
+                "graveyard": []
             }
         ],
         "rounds": [
