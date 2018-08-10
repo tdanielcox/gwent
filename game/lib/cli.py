@@ -7,7 +7,7 @@ class CLI:
         self.logger = Logger
 
     def start_round(self, current_round):
-        if self.gwent.game['loser'] is None:
+        if self.gwent.game['winner'] is None:
             self.gwent.game['round'] = current_round
 
             for x in range(60):

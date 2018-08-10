@@ -80,6 +80,14 @@ class Logger:
             print 'Player wins the game!'
         elif player_index == 1:
             print 'Computer wins the game!'
+        else:
+            print 'Tie game!'
+
+    def print_unplayable_game(self, Gwent):
+        if self.enable_logging is not True and self.enable_logging is not 'winner':
+            return None
+
+        print 'This game has already been concluded'
 
     def print_board(self, Gwent, current_round):
         if self.enable_logging is not True:

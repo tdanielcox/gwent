@@ -5,7 +5,7 @@ def full_game():
     return copy.deepcopy({
         "status": ["round_0_start", "player_1_start"],
         "current_player": 0,
-        "loser": None,
+        "winner": None,
         "id": "5104b41c-a61c-4532-8767-21f77cb68416",
         "players": [
             {

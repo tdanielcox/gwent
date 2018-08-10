@@ -30,7 +30,7 @@ class Gwent:
         self.game = {
             'id': util.generate_uuid(),
             'round': 0,
-            'loser': None,
+            'winner': None,
             'current_player': first_player,
             'rounds': [
                 self.__setup_round(),
@@ -51,6 +51,10 @@ class Gwent:
     def load(self, blob):
         self.game = blob
 
+        if not self.__game_playable():
+            self.logger.print_unplayable_game(self)
+            return None
+
         return self.game
 
     # Start the game
@@ -59,7 +63,7 @@ class Gwent:
             self.has_player = False
             self.computer_turn = computer_round_actions
             self.computer_trade_round = computer_trade_actions
-        elif player_count == 1:
+        else:
             self.computer_turn = computer_round_actions
             self.computer_trade_round = computer_trade_actions
 
@@ -78,12 +82,19 @@ class Gwent:
                 self.finish_game()
 
     def ai_turn(self):
+        if not self.__game_playable():
+            return None
+
         current_round = self.game['round']
         self.computer_turn(self, current_round, self.game['players'][util.COMPUTER]['cards'])
 
         return self.game
 
     def play_card(self, card_id):
+        if not self.__game_playable():
+            self.logger.print_unplayable_game(self)
+            return None
+
         current_round = self.game['round']
         player_index = self.game['current_player']
         player = self.game['players'][player_index]
@@ -166,6 +177,10 @@ class Gwent:
         return self.play_card(card[util.ID])
 
     def trade_cycle(self, player_index, num_cards):
+        if not self.__game_playable():
+            self.logger.print_unplayable_game(self)
+            return None
+
         if player_index == util.COMPUTER and self.computer_turn is not False:
             self.computer_trade_round(self, num_cards, self.game['players'][util.COMPUTER]['cards'])
         elif player_index == util.PLAYER and self.has_player is False:
@@ -174,6 +189,10 @@ class Gwent:
             self.cli.prompt_trade_cycle(num_cards)
 
     def pass_round(self):
+        if not self.__game_playable():
+            self.logger.print_unplayable_game(self)
+            return None
+
         current_round = self.game['round']
         player_index = self.game['current_player']
 
@@ -339,13 +358,56 @@ class Gwent:
 
         self.logger.print_winner(self, winner)
 
-        if current_round == 2:
-            self.logger.print_game_winner(self, not self.game['loser'])
+        winner = self.__check_winner()
+
+        if winner is not None or last_round == 2:
+            if winner == 'tie':
+                self.logger.print_game_winner(self, None)
+            else:
+                self.logger.print_game_winner(self, self.game['winner'])
 
         return winner
 
     def finish_game(self):
         pass
+
+    def __game_playable(self):
+        if self.game['round'] > 2:
+            return False
+
+        if self.game['winner'] is not None:
+            return False
+
+        return True
+
+    def __check_winner(self):
+        player_losses = self.game['players'][util.PLAYER]['losses']
+        computer_losses = self.game['players'][util.COMPUTER]['losses']
+        player_lost = False
+        computer_lost = False
+
+        if player_losses[0] is True and player_losses[1] is True:
+            player_lost = True
+
+        if computer_losses[0] is True and computer_losses[1] is True:
+            computer_lost = True
+
+        if player_lost and computer_lost:
+            self.game['winner'] = 'tie'
+        elif player_lost:
+            self.game['winner'] = util.COMPUTER
+        elif computer_lost:
+            self.game['winner'] = util.PLAYER
+
+        return self.game['winner']
+
+    def __increment_losses(self, loser):
+        losses = self.game['players'][loser]['losses']
+
+        if not losses[0]:
+            losses[0] = True
+        else:
+            losses[1] = True
 
     def __set_graveyards(self, current_round):
         board = self.game['rounds'][current_round]['cards']
@@ -416,15 +478,6 @@ class Gwent:
     def __factor_round_winner(self):
         current_round = self.game['round']
         return self.determine_last_round_winner(current_round + 1)
-
-    def __increment_losses(self, loser):
-        losses = self.game['players'][loser]['losses']
-
-        if not losses[0]:
-            losses[0] = True
-        else:
-            losses[1] = True
-            self.game['loser'] = loser
 
     def __next_round(self, current_round, round_winner):
         new_round = current_round + 1
